@@ -10,13 +10,16 @@ import StockTable from '@/components/StockTable.vue'
 const { data: productos, isPending } = useConvexQuery(api.products.list, () => ({
   token: token.value,
 }))
+const { data: usuarios } = useConvexQuery(api.users.list, () => ({ token: token.value }))
 
 const lista = computed(() => productos.value ?? [])
-const unidadesTotales = computed(() => lista.value.reduce((suma, p) => suma + p.stock, 0))
+const gente = computed(() => usuarios.value ?? [])
+
+const unidadesTotales = computed(() => lista.value.reduce((suma, p) => suma + p.total, 0))
 const valorInventario = computed(() =>
-  lista.value.reduce((suma, p) => suma + p.price * p.stock, 0),
+  lista.value.reduce((suma, p) => suma + p.price * p.total, 0),
 )
-const agotados = computed(() => lista.value.filter((p) => p.stock === 0).length)
+const agotados = computed(() => lista.value.filter((p) => p.total === 0).length)
 
 const resumen = computed(() => [
   { titulo: 'Productos', valor: formatearNumero(lista.value.length) },
@@ -31,7 +34,8 @@ const resumen = computed(() => [
     <header>
       <h1 class="titulo-pagina">Inventario</h1>
       <p class="mt-1.5 text-[14px] text-cascara-600">
-        Cuánto queda de cada producto. Usa "Recibir stock" cuando llegue mercadería.
+        Qué tiene cada quien. La mercadería se recibe a nombre de una persona, y esa persona es la
+        que después la vende.
       </p>
     </header>
 
@@ -44,6 +48,6 @@ const resumen = computed(() => [
       </div>
     </div>
 
-    <StockTable :productos="lista" :cargando="isPending" />
+    <StockTable :productos="lista" :usuarios="gente" :cargando="isPending" />
   </div>
 </template>

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useConvexMutation } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
-import type { Doc, Id } from '../../convex/_generated/dataModel'
+import type { Id } from '../../convex/_generated/dataModel'
 import {
   UNIDADES,
   formatearMedida,
@@ -11,12 +11,13 @@ import {
   formatearNumero,
   type UnidadProducto,
 } from '@/lib/format'
+import type { Producto } from '@/lib/tipos'
 import { mensajeDeError } from '@/lib/errores'
 import { token } from '@/lib/sesion'
 import AvisoMensaje from './AvisoMensaje.vue'
 
 defineProps<{
-  productos: Doc<'products'>[]
+  productos: Producto[]
   cargando: boolean
 }>()
 
@@ -39,7 +40,7 @@ function cerrarTodo() {
   error.value = ''
 }
 
-function abrirEdicion(producto: Doc<'products'>) {
+function abrirEdicion(producto: Producto) {
   cerrarTodo()
   editandoId.value = producto._id
   editNombre.value = producto.name
@@ -170,7 +171,7 @@ async function confirmarEliminacion(id: Id<'products'>) {
             </td>
 
             <td data-col="Stock" class="num text-cascara-600">
-              {{ formatearNumero(producto.stock) }}
+              {{ formatearNumero(producto.total) }}
             </td>
 
             <td data-col="" class="text-right">
@@ -204,8 +205,9 @@ async function confirmarEliminacion(id: Id<'products'>) {
               <div class="flex flex-wrap items-center gap-3">
                 <span class="text-[14px] text-piel-700">
                   Se elimina "{{ producto.name }}" del catálogo.
-                  <template v-if="producto.stock > 0">
-                    Tiene {{ formatearNumero(producto.stock) }} unidades en stock.
+                  <template v-if="producto.total > 0">
+                    Se pierden {{ formatearNumero(producto.total) }} unidades repartidas entre las
+                    personas.
                   </template>
                   Las ventas ya registradas se mantienen.
                 </span>

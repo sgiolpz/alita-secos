@@ -1,7 +1,9 @@
 import { ConvexError, v } from 'convex/values'
+
 import { mutation, query } from './_generated/server'
 import type { Id } from './_generated/dataModel'
 import { requiereUsuario } from './model/auth'
+import { ajustarStock, stockDe } from './model/stock'
 
 /** Últimas ventas registradas, de la más reciente a la más antigua. */
 export const list = query({
@@ -14,10 +16,11 @@ export const list = query({
 })
 
 /**
- * Registra una venta y descuenta el stock de cada producto.
+ * Registra una venta y descuenta el stock de quien la está haciendo.
  *
- * Las mutations de Convex son transaccionales: si una sola línea falla
- * (producto inexistente o stock insuficiente) no se aplica ningún cambio.
+ * Cada quien vende de lo suyo: el descuento sale siempre del stock de la
+ * sesión, nunca del de otra persona. Las mutations de Convex son
+ * transaccionales, así que si una sola línea falla no se aplica nada.
  */
 export const create = mutation({
   args: {
@@ -30,7 +33,7 @@ export const create = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
+    const vendedor = await requiereUsuario(ctx, args.token)
 
     if (args.items.length === 0) {
       throw new ConvexError('La venta no tiene productos.')
@@ -53,9 +56,11 @@ export const create = mutation({
       if (!product) {
         throw new ConvexError('Uno de los productos de la venta ya no existe.')
       }
-      if (product.stock < quantity) {
+
+      const propio = await stockDe(ctx, productId, vendedor._id)
+      if (propio < quantity) {
         throw new ConvexError(
-          `Stock insuficiente de "${product.name}": quedan ${product.stock} unidades y se intentan vender ${quantity}.`,
+          `${vendedor.displayName} tiene ${propio} unidades de "${product.name}" y se intentan vender ${quantity}.`,
         )
       }
 
@@ -71,13 +76,14 @@ export const create = mutation({
     }
 
     for (const line of lines) {
-      const product = await ctx.db.get(line.productId)
-      if (!product) {
-        throw new ConvexError('Uno de los productos de la venta ya no existe.')
-      }
-      await ctx.db.patch(line.productId, { stock: product.stock - line.quantity })
+      await ajustarStock(ctx, line.productId, vendedor._id, -line.quantity)
     }
 
-    return await ctx.db.insert('sales', { items: lines, total })
+    return await ctx.db.insert('sales', {
+      userId: vendedor._id,
+      sellerName: vendedor.displayName,
+      items: lines,
+      total,
+    })
   },
 })

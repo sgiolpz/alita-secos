@@ -33,7 +33,12 @@ const recaudado = computed(() => lista.value.reduce((suma, venta) => suma + vent
     <ul v-else class="divide-y divide-kraft-200">
       <li v-for="venta in lista" :key="venta._id" class="px-5 py-4">
         <div class="flex items-baseline justify-between gap-4">
-          <p class="rotulo">{{ formatearFecha(venta._creationTime) }}</p>
+          <p class="rotulo">
+            {{ formatearFecha(venta._creationTime) }}
+            <span v-if="venta.sellerName" class="normal-case text-cascara-500">
+              · {{ venta.sellerName }}
+            </span>
+          </p>
           <p class="font-display text-[19px] font-bold tabular-nums tracking-[-0.02em]">
             {{ formatearMoneda(venta.total) }}
           </p>

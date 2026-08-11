@@ -9,9 +9,12 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as migracionStock from "../migracionStock.js";
 import type * as model_auth from "../model/auth.js";
+import type * as model_stock from "../model/stock.js";
 import type * as products from "../products.js";
 import type * as sales from "../sales.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -21,9 +24,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  migracionStock: typeof migracionStock;
   "model/auth": typeof model_auth;
+  "model/stock": typeof model_stock;
   products: typeof products;
   sales: typeof sales;
+  users: typeof users;
 }>;
 
 /**

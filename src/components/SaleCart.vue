@@ -3,14 +3,15 @@ import { computed, ref, watch } from 'vue'
 import { useConvexMutation } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
-import type { Doc, Id } from '../../convex/_generated/dataModel'
+import type { Id } from '../../convex/_generated/dataModel'
 import { formatearMoneda, formatearNumero, nombreCompleto } from '@/lib/format'
+import type { Producto } from '@/lib/tipos'
 import { mensajeDeError } from '@/lib/errores'
 import { token } from '@/lib/sesion'
 import AvisoMensaje from './AvisoMensaje.vue'
 
 const props = defineProps<{
-  productos: Doc<'products'>[]
+  productos: Producto[]
   cargando: boolean
 }>()
 
@@ -51,8 +52,9 @@ function enCarrito(id: string): number {
     .reduce((suma, linea) => suma + linea.quantity, 0)
 }
 
-function disponible(producto: Doc<'products'>): number {
-  return producto.stock - enCarrito(producto._id)
+/** Solo se puede vender lo propio, aunque el catálogo se vea completo. */
+function disponible(producto: Producto): number {
+  return producto.propio - enCarrito(producto._id)
 }
 
 const detalle = computed(() =>
@@ -64,7 +66,7 @@ const detalle = computed(() =>
         productId: linea.productId,
         name: nombreCompleto(producto.name, producto.size, producto.unit),
         price: producto.price,
-        stock: producto.stock,
+        stock: producto.propio,
         quantity: linea.quantity,
         subtotal: producto.price * linea.quantity,
       },
@@ -92,8 +94,8 @@ function agregarLinea() {
   if (cantidad.value > libre) {
     error.value =
       libre <= 0
-        ? `"${producto.name}" no tiene stock disponible.`
-        : `Solo quedan ${libre} unidades disponibles de "${producto.name}".`
+        ? `No tienes stock de "${producto.name}". Recíbelo en Inventario o pide un traspaso.`
+        : `Te quedan ${libre} unidades disponibles de "${producto.name}".`
     return
   }
 
@@ -117,9 +119,9 @@ function cambiarCantidad(productId: string, nuevaCantidad: number) {
     linea.quantity = 1
     return
   }
-  linea.quantity = Math.min(nuevaCantidad, producto.stock)
-  if (nuevaCantidad > producto.stock) {
-    error.value = `Solo hay ${producto.stock} unidades de "${producto.name}".`
+  linea.quantity = Math.min(nuevaCantidad, producto.propio)
+  if (nuevaCantidad > producto.propio) {
+    error.value = `Tienes ${producto.propio} unidades de "${producto.name}".`
   }
 }
 
@@ -193,8 +195,12 @@ async function registrarVenta() {
               :disabled="disponible(producto) <= 0"
             >
               {{ nombreCompleto(producto.name, producto.size, producto.unit) }} —
-              {{ formatearMoneda(producto.price) }} ({{ formatearNumero(disponible(producto)) }}
-              disp.)
+              {{ formatearMoneda(producto.price) }}
+              <template v-if="disponible(producto) > 0">
+                ({{ formatearNumero(disponible(producto)) }} tuyas)
+              </template>
+              <template v-else-if="producto.total > 0">(sin stock tuyo)</template>
+              <template v-else>(agotado)</template>
             </option>
           </select>
         </div>

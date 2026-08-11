@@ -19,7 +19,7 @@ const lista = computed(() => productos.value ?? [])
     <header>
       <h1 class="titulo-pagina">Ventas</h1>
       <p class="mt-1.5 text-[14px] text-cascara-600">
-        Arma el carrito y registra la venta: el stock se descuenta solo.
+        Arma el carrito y registra la venta. Se descuenta de tu stock y la venta queda a tu nombre.
       </p>
     </header>
 
