@@ -43,46 +43,56 @@ async function entrar() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-cascara-50 px-4 py-12">
-    <div class="w-full max-w-sm">
-      <div class="mb-6 flex flex-col items-center text-center">
-        <img src="/favicon.svg" alt="" class="h-16 w-16" />
-        <h1 class="mt-3 text-2xl font-bold text-cascara-900">Alita Secos</h1>
-        <p class="text-sm text-cascara-600">Control de inventario y ventas</p>
+  <div class="flex min-h-screen items-center justify-center bg-kraft-50 px-5 py-12">
+    <div class="w-full max-w-[380px]">
+      <div class="overflow-hidden rounded-[10px] border border-kraft-200 bg-nuez-50">
+        <div class="flex items-center gap-3 bg-tostado-900 px-6 py-5 text-kraft-50">
+          <img src="/favicon.svg" alt="" class="h-10 w-10" />
+          <span class="leading-tight">
+            <span class="block font-display text-[21px] font-bold tracking-[-0.02em]">
+              Alita Secos
+            </span>
+            <span class="rotulo block text-cascara-400">Frutos secos</span>
+          </span>
+        </div>
+
+        <form class="space-y-5 px-6 py-6" @submit.prevent="entrar">
+          <div>
+            <label class="etiqueta" for="usuario">Usuario</label>
+            <input
+              id="usuario"
+              v-model="usuario"
+              class="campo"
+              type="text"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              autofocus
+            />
+          </div>
+
+          <div>
+            <label class="etiqueta" for="password">Contraseña</label>
+            <input
+              id="password"
+              v-model="password"
+              class="campo"
+              type="password"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <AvisoMensaje v-if="error" tipo="error" :texto="error" />
+
+          <button class="btn-venta w-full" type="submit" :disabled="isPending">
+            {{ isPending ? 'Entrando…' : 'Entrar' }}
+          </button>
+        </form>
       </div>
 
-      <form class="tarjeta space-y-4 p-6" @submit.prevent="entrar">
-        <div>
-          <label class="etiqueta" for="usuario">Usuario</label>
-          <input
-            id="usuario"
-            v-model="usuario"
-            class="campo"
-            type="text"
-            autocomplete="username"
-            autocapitalize="none"
-            spellcheck="false"
-            autofocus
-          />
-        </div>
-
-        <div>
-          <label class="etiqueta" for="password">Contraseña</label>
-          <input
-            id="password"
-            v-model="password"
-            class="campo"
-            type="password"
-            autocomplete="current-password"
-          />
-        </div>
-
-        <AvisoMensaje v-if="error" tipo="error" :texto="error" />
-
-        <button class="btn-primario w-full" type="submit" :disabled="isPending">
-          {{ isPending ? 'Entrando…' : 'Entrar' }}
-        </button>
-      </form>
+      <p class="mt-4 text-center text-[13px] text-cascara-600">
+        Inventario y ventas. Uso interno del local.
+      </p>
     </div>
   </div>
 </template>

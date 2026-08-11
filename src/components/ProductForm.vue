@@ -44,7 +44,7 @@ async function enviar() {
       unit: unidad.value,
       price: precio.value,
     })
-    exito.value = `"${nombreLimpio}" se agregó al catálogo. Cárgale stock desde Inventario.`
+    exito.value = `${nombreLimpio} creado. Cárgale stock desde Inventario.`
     nombre.value = ''
     peso.value = null
     precio.value = null
@@ -55,15 +55,14 @@ async function enviar() {
 </script>
 
 <template>
-  <section class="tarjeta p-5">
-    <h2 class="text-lg font-bold text-cascara-800">Crear producto</h2>
-    <p class="mb-4 text-sm text-cascara-600">
-      El producto se crea con stock 0. Las unidades se cargan en Inventario cuando llega la
-      mercadería.
-    </p>
+  <section class="panel overflow-hidden">
+    <div class="panel-cabecera">
+      <h2 class="titulo-seccion">Crear producto</h2>
+      <span class="rotulo">Nace con stock 0</span>
+    </div>
 
     <form
-      class="grid gap-4 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] sm:items-end"
+      class="grid gap-4 px-5 py-5 sm:grid-cols-[2fr_110px_150px_140px_auto] sm:items-end"
       @submit.prevent="enviar"
     >
       <div>
@@ -114,11 +113,11 @@ async function enviar() {
       </div>
 
       <button class="btn-primario h-[42px]" type="submit" :disabled="isPending">
-        {{ isPending ? 'Guardando…' : 'Crear' }}
+        {{ isPending ? 'Creando…' : 'Crear producto' }}
       </button>
     </form>
 
-    <div v-if="error || exito" class="mt-4">
+    <div v-if="error || exito" class="px-5 pb-5">
       <AvisoMensaje v-if="error" tipo="error" :texto="error" />
       <AvisoMensaje v-else tipo="exito" :texto="exito" />
     </div>

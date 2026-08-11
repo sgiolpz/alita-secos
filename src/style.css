@@ -1,43 +1,55 @@
 @import 'tailwindcss';
 
-/* Paleta "maní natural con cáscara":
-   cascara = tonos de la cáscara tostada, nuez = el interior claro del maní,
-   piel = el rojizo de la piel que envuelve al grano. */
+/* ---------------------------------------------------------------------------
+   Alita Secos — identidad visual
+
+   Todo sale de un maní con cáscara de verdad: la cáscara es tostada con un
+   dejo gris (no naranja), el papel de estraza del envase, el grano marfil, la
+   piel granate que envuelve al grano y el marrón profundo del maní tostado.
+   Un solo acento —el granate de la piel— reservado para la acción principal
+   y para las alarmas de stock.
+--------------------------------------------------------------------------- */
 @theme {
-  --color-cascara-50: #fbf7f0;
-  --color-cascara-100: #f3e9d8;
-  --color-cascara-200: #e8d6b8;
-  --color-cascara-300: #d9be92;
-  --color-cascara-400: #c7a46d;
-  --color-cascara-500: #b08853;
-  --color-cascara-600: #946c3e;
-  --color-cascara-700: #75532f;
-  --color-cascara-800: #573d24;
-  --color-cascara-900: #3b2a1a;
+  --color-kraft-50: #f7f2e7; /* papel de estraza claro: fondo de página */
+  --color-kraft-100: #f2ead9; /* superficies */
+  --color-kraft-200: #e4d7be; /* bordes y filas */
+  --color-kraft-300: #d2be9a;
 
-  --color-nuez-50: #fdf9f1;
-  --color-nuez-100: #f7efdf;
-  --color-nuez-200: #efe1c6;
+  --color-nuez-50: #fdfaf4; /* grano de maní: superficies elevadas */
+  --color-nuez-100: #f9f3e6;
 
-  --color-piel-400: #b9683c;
-  --color-piel-500: #a0522d;
-  --color-piel-600: #83411f;
-  --color-piel-700: #6a3419;
+  --color-cascara-400: #c2a578; /* la cáscara */
+  --color-cascara-500: #a98a5c;
+  --color-cascara-600: #8a6e45;
 
-  --font-sans:
-    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --color-piel-500: #98371f; /* piel del grano: granate, no terracota */
+  --color-piel-600: #7c2d1c;
+  --color-piel-700: #5f2115;
+
+  --color-tostado-700: #4a3524; /* maní tostado */
+  --color-tostado-800: #3a2818;
+  --color-tostado-900: #2e2013; /* banda superior y texto */
+
+  --font-display: 'Bricolage Grotesque Variable', 'Archivo Variable', system-ui, sans-serif;
+  --font-sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 @layer base {
   html {
-    background-color: var(--color-cascara-50);
+    background-color: var(--color-kraft-50);
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-cascara-50 text-cascara-900 font-sans antialiased;
+    @apply bg-kraft-50 font-sans text-[15px] text-tostado-900 antialiased;
   }
 
-  /* Oculta las flechitas de los input[type=number] para que las tablas respiren. */
+  /* Todas las cifras de dinero, stock y peso alinean en columna. */
+  table,
+  input[type='number'] {
+    font-variant-numeric: tabular-nums;
+  }
+
   input[type='number']::-webkit-outer-spin-button,
   input[type='number']::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -47,46 +59,211 @@
   input[type='number'] {
     -moz-appearance: textfield;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--color-piel-600);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 @layer components {
+  /* --- Tipografía -------------------------------------------------------- */
+
+  /* Rótulo de utilidad: encabezados de columna, epígrafes, nombres de dato.
+     Es el hilo estructural que se repite en toda la app. */
+  .rotulo {
+    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-cascara-600;
+  }
+
+  .titulo-pagina {
+    font-family: var(--font-display);
+    @apply text-[30px] font-bold leading-none tracking-[-0.02em] text-tostado-900;
+  }
+
+  .titulo-seccion {
+    font-family: var(--font-display);
+    @apply text-[19px] font-semibold tracking-[-0.01em] text-tostado-900;
+  }
+
+  .cifra {
+    font-family: var(--font-display);
+    @apply text-[28px] font-bold leading-none tracking-[-0.02em] tabular-nums;
+  }
+
+  /* --- Formularios ------------------------------------------------------- */
+
   .campo {
-    @apply w-full rounded-lg border border-cascara-300 bg-white px-3 py-2 text-cascara-900
-           placeholder:text-cascara-400 focus:border-cascara-500 focus:outline-none
-           focus:ring-2 focus:ring-cascara-500/30 disabled:opacity-60;
+    @apply w-full rounded-[5px] border border-kraft-300 bg-nuez-50 px-3 py-2 text-[15px]
+           text-tostado-900 transition-colors placeholder:text-cascara-500/70
+           focus:border-piel-600 focus:outline-none focus:ring-[3px] focus:ring-piel-600/15
+           disabled:opacity-60;
+  }
+
+  select.campo {
+    @apply pr-8;
   }
 
   .etiqueta {
-    @apply mb-1 block text-sm font-medium text-cascara-700;
+    @apply mb-1.5 block font-sans text-[11px] font-semibold uppercase tracking-[0.12em]
+           text-cascara-600;
   }
+
+  /* --- Botones ----------------------------------------------------------- */
 
   .btn,
   .btn-primario,
   .btn-venta,
   .btn-suave {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm
-           font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-[5px] px-4 py-2.5 text-[14px]
+           font-semibold tracking-[-0.005em] transition-colors
+           disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-primario {
-    @apply bg-cascara-600 text-white hover:bg-cascara-700;
+    @apply bg-tostado-900 text-kraft-50 hover:bg-tostado-700;
   }
 
   .btn-venta {
-    @apply bg-piel-500 text-white hover:bg-piel-600;
+    @apply bg-piel-600 text-nuez-50 hover:bg-piel-700;
   }
 
   .btn-suave {
-    @apply border border-cascara-300 bg-white text-cascara-700 hover:bg-cascara-100;
+    @apply border border-kraft-300 bg-nuez-50 text-tostado-800 hover:border-cascara-400
+           hover:bg-kraft-100;
   }
 
-  .btn-mini {
-    @apply inline-flex items-center gap-1 rounded-md border border-cascara-300 bg-white px-2.5
-           py-1 text-xs font-semibold text-cascara-700 transition-colors hover:bg-cascara-100
-           disabled:cursor-not-allowed disabled:opacity-50;
+  .btn-mini,
+  .btn-mini-fuerte,
+  .btn-mini-riesgo {
+    @apply inline-flex items-center justify-center gap-1 rounded-[4px] border border-kraft-300
+           bg-nuez-50 px-2.5 py-1.5 text-[12px] font-semibold text-tostado-800 transition-colors
+           hover:border-cascara-400 hover:bg-kraft-100
+           disabled:cursor-not-allowed disabled:opacity-40;
   }
 
-  .tarjeta {
-    @apply rounded-2xl border border-cascara-200 bg-nuez-100 shadow-sm;
+  .btn-mini-fuerte {
+    @apply border-tostado-900 bg-tostado-900 text-kraft-50 hover:border-tostado-900
+           hover:bg-tostado-700;
+  }
+
+  .btn-mini-riesgo {
+    @apply border-piel-600/40 bg-nuez-50 text-piel-600 hover:border-piel-600 hover:bg-piel-600/8;
+  }
+
+  /* --- Superficies ------------------------------------------------------- */
+
+  .panel {
+    @apply rounded-[8px] border border-kraft-200 bg-nuez-50;
+  }
+
+  .panel-cabecera {
+    @apply flex flex-wrap items-baseline justify-between gap-2 border-b border-kraft-200 px-5 py-4;
+  }
+
+  /* --- El ticket ---------------------------------------------------------
+     El total de la venta se presenta como el papel que se corta y se pasa por
+     el mesón: fondo tostado, tinta color grano y el borde superior troquelado.
+     Es el único momento de la app que levanta la voz. */
+  .ticket {
+    --muesca: 8px;
+    @apply bg-tostado-900 text-kraft-50;
+    -webkit-mask-image: radial-gradient(
+      circle at var(--muesca) 0,
+      #0000 var(--muesca),
+      #000 calc(var(--muesca) + 0.5px)
+    );
+    mask-image: radial-gradient(
+      circle at var(--muesca) 0,
+      #0000 var(--muesca),
+      #000 calc(var(--muesca) + 0.5px)
+    );
+    -webkit-mask-size: calc(var(--muesca) * 2) 100%;
+    mask-size: calc(var(--muesca) * 2) 100%;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+  }
+
+  .ticket-monto {
+    font-family: var(--font-display);
+    @apply text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums text-nuez-50;
+  }
+
+  /* Botón que cierra la venta: se invierte contra el ticket, como el sello. */
+  .btn-ticket {
+    @apply inline-flex items-center justify-center rounded-[5px] bg-kraft-50 px-5 py-2.5
+           text-[14px] font-bold text-tostado-900 transition-colors hover:bg-white
+           disabled:cursor-not-allowed disabled:bg-tostado-700 disabled:text-cascara-500;
+  }
+
+  .btn-ticket-suave {
+    @apply inline-flex items-center justify-center rounded-[5px] border border-tostado-700 px-4
+           py-2.5 text-[14px] font-semibold text-cascara-400 transition-colors
+           hover:border-cascara-600 hover:text-kraft-100
+           disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  /* --- Tablas ------------------------------------------------------------ */
+
+  .tabla {
+    @apply w-full text-left text-[14px];
+  }
+
+  .tabla thead th {
+    @apply border-b-2 border-tostado-900/85 px-5 py-2.5 font-sans text-[11px] font-semibold
+           uppercase tracking-[0.12em] text-cascara-600;
+  }
+
+  .tabla tbody td {
+    @apply border-b border-kraft-200 px-5 py-3.5 align-middle;
+  }
+
+  .tabla tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .num {
+    @apply text-right tabular-nums;
+  }
+
+  /* En pantallas chicas cada fila se convierte en un bloque legible: esta app
+     se usa de pie en el mesón, no sentado frente a una planilla. */
+  @media (width < 40rem) {
+    .tabla-apilable thead {
+      @apply hidden;
+    }
+
+    .tabla-apilable tbody tr.fila-dato {
+      @apply block border-b border-kraft-200 px-5 py-3;
+    }
+
+    .tabla-apilable tbody tr.fila-dato:last-child {
+      @apply border-b-0;
+    }
+
+    .tabla-apilable tbody tr.fila-dato td {
+      @apply flex items-center justify-between gap-4 border-0 px-0 py-1 text-left;
+    }
+
+    .tabla-apilable tbody tr.fila-dato td::before {
+      content: attr(data-col);
+      @apply font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-cascara-600;
+    }
+
+    .tabla-apilable tbody tr.fila-dato td[data-col='']::before {
+      @apply hidden;
+    }
+
+    .tabla-apilable tbody tr.fila-panel td {
+      @apply px-5;
+    }
   }
 }

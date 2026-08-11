@@ -39,7 +39,7 @@ async function confirmarReposicion(id: Id<'products'>) {
     !Number.isInteger(cantidadRepo.value) ||
     cantidadRepo.value <= 0
   ) {
-    error.value = 'La cantidad a reponer debe ser un entero mayor a 0.'
+    error.value = 'La cantidad a recibir debe ser un entero mayor a 0.'
     return
   }
   try {
@@ -52,90 +52,89 @@ async function confirmarReposicion(id: Id<'products'>) {
 </script>
 
 <template>
-  <section class="tarjeta overflow-hidden">
-    <div class="flex items-center justify-between border-b border-cascara-200 px-5 py-4">
-      <h2 class="text-lg font-bold text-cascara-800">Stock</h2>
-      <span class="text-sm text-cascara-600">{{ productos.length }} productos</span>
+  <section class="panel overflow-hidden">
+    <div class="panel-cabecera">
+      <h2 class="titulo-seccion">Stock</h2>
+      <span class="rotulo">{{ productos.length }} productos</span>
     </div>
 
     <div v-if="error" class="px-5 pt-4">
       <AvisoMensaje tipo="error" :texto="error" />
     </div>
 
-    <p v-if="cargando" class="px-5 py-10 text-center text-cascara-600">Cargando inventario…</p>
+    <p v-if="cargando" class="px-5 py-10 text-center text-[14px] text-cascara-600">
+      Cargando inventario…
+    </p>
 
-    <p v-else-if="productos.length === 0" class="px-5 py-10 text-center text-cascara-600">
+    <p v-else-if="productos.length === 0" class="px-5 py-10 text-center text-[14px] text-cascara-600">
       No hay productos en el catálogo. Créalos en la pantalla Productos.
     </p>
 
-    <div v-else class="overflow-x-auto">
-      <table class="w-full text-left text-sm">
-        <thead class="bg-nuez-200/60 text-xs uppercase tracking-wide text-cascara-700">
+    <div v-else>
+      <table class="tabla tabla-apilable">
+        <thead>
           <tr>
-            <th class="px-5 py-3 font-semibold">Producto</th>
-            <th class="px-5 py-3 text-right font-semibold">Peso</th>
-            <th class="px-5 py-3 text-right font-semibold">Precio</th>
-            <th class="px-5 py-3 text-right font-semibold">Stock</th>
-            <th class="px-5 py-3 text-right font-semibold"></th>
+            <th>Producto</th>
+            <th class="num">Peso</th>
+            <th class="num">Precio</th>
+            <th class="num">Stock</th>
+            <th></th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-cascara-200">
+        <tbody>
           <template v-for="producto in productos" :key="producto._id">
-            <tr :class="producto.stock === 0 ? 'bg-piel-500/5' : ''">
-              <td class="px-5 py-3 font-medium text-cascara-900">{{ producto.name }}</td>
-              <td class="px-5 py-3 text-right text-cascara-700">
+            <tr class="fila-dato" :class="producto.stock === 0 ? 'bg-piel-600/4' : ''">
+              <td data-col="Producto" class="font-semibold">{{ producto.name }}</td>
+              <td data-col="Peso" class="num text-cascara-600">
                 {{ formatearMedida(producto.size, producto.unit) }}
               </td>
-              <td class="px-5 py-3 text-right">{{ formatearMoneda(producto.price) }}</td>
+              <td data-col="Precio" class="num">{{ formatearMoneda(producto.price) }}</td>
 
-              <td class="px-5 py-3 text-right">
+              <td data-col="Stock" class="num">
                 <span
-                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold"
-                  :class="
-                    producto.stock === 0
-                      ? 'bg-piel-500/15 text-piel-700'
-                      : producto.stock <= 5
-                        ? 'bg-cascara-400/25 text-cascara-800'
-                        : 'bg-cascara-200/70 text-cascara-800'
-                  "
+                  class="inline-flex items-baseline gap-1.5 font-semibold tabular-nums"
+                  :class="producto.stock === 0 ? 'text-piel-600' : 'text-tostado-900'"
                 >
                   {{ formatearNumero(producto.stock) }}
-                  <span v-if="producto.stock === 0" class="ml-1 font-semibold">· sin stock</span>
-                  <span v-else-if="producto.stock <= 5" class="ml-1 font-semibold">
-                    · queda poco
+                  <span v-if="producto.stock === 0" class="rotulo text-piel-600">agotado</span>
+                  <span v-else-if="producto.stock <= 5" class="rotulo text-cascara-600">
+                    queda poco
                   </span>
                 </span>
               </td>
 
-              <td class="px-5 py-3 text-right">
-                <button class="btn-mini" @click="abrirReposicion(producto)">+ Stock</button>
+              <td data-col="" class="text-right">
+                <button class="btn-mini" @click="abrirReposicion(producto)">Recibir stock</button>
               </td>
             </tr>
 
-            <tr v-if="reponiendoId === producto._id" class="bg-nuez-200/40">
-              <td colspan="5" class="px-5 py-3">
-                <div class="flex flex-wrap items-center gap-3">
-                  <label class="text-sm font-medium text-cascara-700">
-                    Unidades a agregar a "{{ producto.name }}"
-                  </label>
-                  <input
-                    v-model.number="cantidadRepo"
-                    class="campo w-28 py-1"
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="10"
-                    @keyup.enter="confirmarReposicion(producto._id)"
-                  />
+            <tr v-if="reponiendoId === producto._id" class="fila-panel bg-kraft-100">
+              <td colspan="5" class="px-5 py-4">
+                <div class="flex flex-wrap items-end gap-3">
+                  <div>
+                    <label class="etiqueta" :for="`recibir-${producto._id}`">
+                      Unidades que llegaron de {{ producto.name }}
+                    </label>
+                    <input
+                      :id="`recibir-${producto._id}`"
+                      v-model.number="cantidadRepo"
+                      class="campo w-32 py-1.5"
+                      type="number"
+                      min="1"
+                      step="1"
+                      placeholder="10"
+                      @keyup.enter="confirmarReposicion(producto._id)"
+                    />
+                  </div>
                   <button
-                    class="btn-mini border-cascara-600 bg-cascara-600 text-white hover:bg-cascara-700"
+                    class="btn-mini-fuerte h-[38px]"
                     :disabled="reponiendo"
                     @click="confirmarReposicion(producto._id)"
                   >
-                    Agregar al stock
+                    Recibir stock
                   </button>
-                  <button class="btn-mini" @click="cerrar">Cancelar</button>
+                  <button class="btn-mini h-[38px]" @click="cerrar">Cancelar</button>
                 </div>
               </td>
             </tr>

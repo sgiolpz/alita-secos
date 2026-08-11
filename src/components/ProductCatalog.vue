@@ -90,133 +90,136 @@ async function confirmarEliminacion(id: Id<'products'>) {
 </script>
 
 <template>
-  <section class="tarjeta overflow-hidden">
-    <div class="flex items-center justify-between border-b border-cascara-200 px-5 py-4">
-      <h2 class="text-lg font-bold text-cascara-800">Catálogo</h2>
-      <span class="text-sm text-cascara-600">{{ productos.length }} productos</span>
+  <section class="panel overflow-hidden">
+    <div class="panel-cabecera">
+      <h2 class="titulo-seccion">Catálogo</h2>
+      <span class="rotulo">{{ productos.length }} productos</span>
     </div>
 
     <div v-if="error" class="px-5 pt-4">
       <AvisoMensaje tipo="error" :texto="error" />
     </div>
 
-    <p v-if="cargando" class="px-5 py-10 text-center text-cascara-600">Cargando catálogo…</p>
-
-    <p v-else-if="productos.length === 0" class="px-5 py-10 text-center text-cascara-600">
-      Todavía no hay productos. Crea el primero con el formulario de arriba.
+    <p v-if="cargando" class="px-5 py-10 text-center text-[14px] text-cascara-600">
+      Cargando catálogo…
     </p>
 
-    <div v-else class="overflow-x-auto">
-      <table class="w-full text-left text-sm">
-        <thead class="bg-nuez-200/60 text-xs uppercase tracking-wide text-cascara-700">
-          <tr>
-            <th class="px-5 py-3 font-semibold">Producto</th>
-            <th class="px-5 py-3 text-right font-semibold">Peso</th>
-            <th class="px-5 py-3 text-right font-semibold">Precio</th>
-            <th class="px-5 py-3 text-right font-semibold">Stock</th>
-            <th class="px-5 py-3 text-right font-semibold">Acciones</th>
-          </tr>
-        </thead>
+    <p v-else-if="productos.length === 0" class="px-5 py-10 text-center text-[14px] text-cascara-600">
+      Crea el primer producto con el formulario de arriba.
+    </p>
 
-        <tbody class="divide-y divide-cascara-200">
-          <template v-for="producto in productos" :key="producto._id">
-            <tr>
-              <td class="px-5 py-3">
+    <table v-else class="tabla tabla-apilable">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="num">Peso</th>
+          <th class="num">Precio</th>
+          <th class="num">Stock</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <template v-for="producto in productos" :key="producto._id">
+          <tr class="fila-dato">
+            <td data-col="Producto">
+              <input
+                v-if="editandoId === producto._id"
+                v-model="editNombre"
+                class="campo py-1.5"
+                type="text"
+                aria-label="Nombre"
+              />
+              <span v-else class="font-semibold">{{ producto.name }}</span>
+            </td>
+
+            <td data-col="Peso" class="num">
+              <div v-if="editandoId === producto._id" class="flex justify-end gap-1.5">
                 <input
-                  v-if="editandoId === producto._id"
-                  v-model="editNombre"
-                  class="campo py-1"
-                  type="text"
-                />
-                <span v-else class="font-medium text-cascara-900">{{ producto.name }}</span>
-              </td>
-
-              <td class="px-5 py-3 text-right">
-                <div v-if="editandoId === producto._id" class="flex justify-end gap-1">
-                  <input
-                    v-model.number="editPeso"
-                    class="campo w-20 py-1 text-right"
-                    type="number"
-                    min="1"
-                    step="1"
-                  />
-                  <select v-model="editUnidad" class="campo w-24 py-1">
-                    <option v-for="o in UNIDADES" :key="o.valor" :value="o.valor">
-                      {{ o.etiqueta }}
-                    </option>
-                  </select>
-                </div>
-                <span v-else>{{ formatearMedida(producto.size, producto.unit) }}</span>
-              </td>
-
-              <td class="px-5 py-3 text-right">
-                <input
-                  v-if="editandoId === producto._id"
-                  v-model.number="editPrecio"
-                  class="campo w-28 py-1 text-right"
+                  v-model.number="editPeso"
+                  class="campo w-20 py-1.5 text-right"
                   type="number"
-                  min="0"
+                  min="1"
                   step="1"
+                  aria-label="Peso"
                 />
-                <span v-else>{{ formatearMoneda(producto.price) }}</span>
-              </td>
+                <select v-model="editUnidad" class="campo w-28 py-1.5" aria-label="Unidad">
+                  <option v-for="o in UNIDADES" :key="o.valor" :value="o.valor">
+                    {{ o.etiqueta }}
+                  </option>
+                </select>
+              </div>
+              <span v-else class="text-cascara-600">
+                {{ formatearMedida(producto.size, producto.unit) }}
+              </span>
+            </td>
 
-              <td class="px-5 py-3 text-right text-cascara-600">
-                {{ formatearNumero(producto.stock) }}
-              </td>
+            <td data-col="Precio" class="num">
+              <input
+                v-if="editandoId === producto._id"
+                v-model.number="editPrecio"
+                class="campo w-28 py-1.5 text-right"
+                type="number"
+                min="0"
+                step="1"
+                aria-label="Precio"
+              />
+              <span v-else>{{ formatearMoneda(producto.price) }}</span>
+            </td>
 
-              <td class="px-5 py-3">
-                <div class="flex flex-wrap justify-end gap-1.5">
-                  <template v-if="editandoId === producto._id">
-                    <button
-                      class="btn-mini border-cascara-600 bg-cascara-600 text-white hover:bg-cascara-700"
-                      :disabled="guardando"
-                      @click="guardarEdicion(producto._id)"
-                    >
-                      Guardar
-                    </button>
-                    <button class="btn-mini" @click="cerrarTodo">Cancelar</button>
-                  </template>
+            <td data-col="Stock" class="num text-cascara-600">
+              {{ formatearNumero(producto.stock) }}
+            </td>
 
-                  <template v-else>
-                    <button class="btn-mini" @click="abrirEdicion(producto)">Editar</button>
-                    <button
-                      class="btn-mini border-piel-400/50 text-piel-600 hover:bg-piel-500/10"
-                      @click="
-                        eliminandoId = eliminandoId === producto._id ? null : producto._id
-                      "
-                    >
-                      Eliminar
-                    </button>
-                  </template>
-                </div>
-              </td>
-            </tr>
-
-            <tr v-if="eliminandoId === producto._id" class="bg-piel-500/5">
-              <td colspan="5" class="px-5 py-3">
-                <div class="flex flex-wrap items-center gap-3">
-                  <span class="text-sm text-piel-700">
-                    ¿Eliminar "{{ producto.name }}" del catálogo?
-                    <template v-if="producto.stock > 0">
-                      Tiene {{ formatearNumero(producto.stock) }} unidades en stock.
-                    </template>
-                    Las ventas ya registradas se mantienen.
-                  </span>
+            <td data-col="" class="text-right">
+              <div class="flex flex-wrap justify-end gap-1.5">
+                <template v-if="editandoId === producto._id">
                   <button
-                    class="btn-mini border-piel-500 bg-piel-500 text-white hover:bg-piel-600"
-                    :disabled="eliminando"
-                    @click="confirmarEliminacion(producto._id)"
+                    class="btn-mini-fuerte"
+                    :disabled="guardando"
+                    @click="guardarEdicion(producto._id)"
                   >
-                    Sí, eliminar
+                    Guardar
                   </button>
                   <button class="btn-mini" @click="cerrarTodo">Cancelar</button>
-                </div>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </div>
+                </template>
+
+                <template v-else>
+                  <button class="btn-mini" @click="abrirEdicion(producto)">Editar</button>
+                  <button
+                    class="btn-mini-riesgo"
+                    @click="eliminandoId = eliminandoId === producto._id ? null : producto._id"
+                  >
+                    Eliminar
+                  </button>
+                </template>
+              </div>
+            </td>
+          </tr>
+
+          <tr v-if="eliminandoId === producto._id" class="fila-panel bg-piel-600/5">
+            <td colspan="5" class="px-5 py-4">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="text-[14px] text-piel-700">
+                  Se elimina "{{ producto.name }}" del catálogo.
+                  <template v-if="producto.stock > 0">
+                    Tiene {{ formatearNumero(producto.stock) }} unidades en stock.
+                  </template>
+                  Las ventas ya registradas se mantienen.
+                </span>
+                <button
+                  class="btn-mini border-piel-600 bg-piel-600 text-nuez-50 hover:bg-piel-700"
+                  :disabled="eliminando"
+                  @click="confirmarEliminacion(producto._id)"
+                >
+                  Eliminar producto
+                </button>
+                <button class="btn-mini" @click="cerrarTodo">Cancelar</button>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
   </section>
 </template>

@@ -32,7 +32,7 @@ const productosPorId = computed(
   () => new Map(props.productos.map((producto) => [producto._id as string, producto])),
 )
 
-/** Si un producto se elimina del inventario, sale también del carrito. */
+/** Si un producto se elimina del catálogo, sale también del carrito. */
 watch(
   () => props.productos,
   () => {
@@ -40,7 +40,7 @@ watch(
     const antes = carrito.value.length
     carrito.value = carrito.value.filter((linea) => productosPorId.value.has(linea.productId))
     if (carrito.value.length !== antes) {
-      error.value = 'Se quitaron del carrito productos que ya no están en el inventario.'
+      error.value = 'Se quitaron del carrito productos que ya no están en el catálogo.'
     }
   },
 )
@@ -153,7 +153,7 @@ async function registrarVenta() {
       })),
     })
     carrito.value = []
-    exito.value = `Venta registrada por ${formatearMoneda(totalVenta)}. El stock ya fue descontado.`
+    exito.value = `Venta registrada: ${formatearMoneda(totalVenta)}. Stock descontado.`
   } catch (e) {
     error.value = mensajeDeError(e)
   }
@@ -161,25 +161,31 @@ async function registrarVenta() {
 </script>
 
 <template>
-  <section class="tarjeta p-5">
-    <h2 class="mb-4 text-lg font-bold text-cascara-800">Nueva venta</h2>
+  <section class="panel overflow-hidden">
+    <div class="panel-cabecera">
+      <h2 class="titulo-seccion">Nueva venta</h2>
+      <span v-if="detalle.length > 0" class="rotulo">
+        {{ formatearNumero(unidades) }} {{ unidades === 1 ? 'unidad' : 'unidades' }}
+      </span>
+    </div>
 
-    <p v-if="cargando" class="py-6 text-center text-cascara-600">Cargando productos…</p>
+    <p v-if="cargando" class="px-5 py-10 text-center text-[14px] text-cascara-600">
+      Cargando productos…
+    </p>
 
-    <p v-else-if="productos.length === 0" class="py-6 text-center text-cascara-600">
-      No hay productos en el catálogo. Créalos en la pantalla Productos y cárgales stock en
-      Inventario.
+    <p v-else-if="productos.length === 0" class="px-5 py-10 text-center text-[14px] text-cascara-600">
+      No hay productos en el catálogo. Créalos en Productos y cárgales stock en Inventario.
     </p>
 
     <template v-else>
       <form
-        class="grid gap-4 sm:grid-cols-[2fr_1fr_auto] sm:items-end"
+        class="grid gap-4 px-5 py-5 sm:grid-cols-[2fr_140px_auto] sm:items-end"
         @submit.prevent="agregarLinea"
       >
         <div>
           <label class="etiqueta" for="producto">Producto</label>
           <select id="producto" v-model="seleccionId" class="campo">
-            <option value="">Selecciona un producto…</option>
+            <option value="">Elige un producto…</option>
             <option
               v-for="producto in productos"
               :key="producto._id"
@@ -208,75 +214,76 @@ async function registrarVenta() {
         <button class="btn-suave h-[42px]" type="submit">Agregar al carrito</button>
       </form>
 
-      <div v-if="error || exito" class="mt-4 space-y-2">
+      <div v-if="error || exito" class="space-y-2 px-5 pb-5">
         <AvisoMensaje v-if="error" tipo="error" :texto="error" />
         <AvisoMensaje v-if="exito" tipo="exito" :texto="exito" />
       </div>
 
-      <div class="mt-6 rounded-xl border border-cascara-200 bg-white/70">
-        <p v-if="detalle.length === 0" class="px-4 py-8 text-center text-sm text-cascara-600">
-          El carrito está vacío.
-        </p>
+      <p
+        v-if="detalle.length === 0"
+        class="border-t border-kraft-200 px-5 py-10 text-center text-[14px] text-cascara-600"
+      >
+        Elige un producto para empezar la venta.
+      </p>
 
-        <table v-else class="w-full text-left text-sm">
-          <thead class="border-b border-cascara-200 text-xs uppercase tracking-wide text-cascara-700">
-            <tr>
-              <th class="px-4 py-2 font-semibold">Producto</th>
-              <th class="px-4 py-2 text-right font-semibold">Precio</th>
-              <th class="px-4 py-2 text-center font-semibold">Cantidad</th>
-              <th class="px-4 py-2 text-right font-semibold">Subtotal</th>
-              <th class="px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-cascara-200">
-            <tr v-for="linea in detalle" :key="linea.productId">
-              <td class="px-4 py-2 font-medium text-cascara-900">{{ linea.name }}</td>
-              <td class="px-4 py-2 text-right">{{ formatearMoneda(linea.price) }}</td>
-              <td class="px-4 py-2 text-center">
-                <input
-                  class="campo mx-auto w-20 py-1 text-center"
-                  type="number"
-                  min="1"
-                  :max="linea.stock"
-                  step="1"
-                  :value="linea.quantity"
-                  @change="
-                    cambiarCantidad(
-                      linea.productId,
-                      Number(($event.target as HTMLInputElement).value),
-                    )
-                  "
-                />
-              </td>
-              <td class="px-4 py-2 text-right font-semibold">
-                {{ formatearMoneda(linea.subtotal) }}
-              </td>
-              <td class="px-4 py-2 text-right">
-                <button class="btn-mini border-piel-400/50 text-piel-600 hover:bg-piel-500/10"
-                  @click="quitarLinea(linea.productId)">
-                  Quitar
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table v-else class="tabla tabla-apilable border-t border-kraft-200">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="num">Precio</th>
+            <th class="w-32 text-center">Cantidad</th>
+            <th class="num">Subtotal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="linea in detalle" :key="linea.productId" class="fila-dato">
+            <td data-col="Producto" class="font-semibold">{{ linea.name }}</td>
+            <td data-col="Precio" class="num text-cascara-600">
+              {{ formatearMoneda(linea.price) }}
+            </td>
+            <td data-col="Cantidad" class="text-center">
+              <input
+                class="campo w-20 py-1 text-center sm:mx-auto"
+                type="number"
+                min="1"
+                :max="linea.stock"
+                step="1"
+                :value="linea.quantity"
+                :aria-label="`Cantidad de ${linea.name}`"
+                @change="
+                  cambiarCantidad(linea.productId, Number(($event.target as HTMLInputElement).value))
+                "
+              />
+            </td>
+            <td data-col="Subtotal" class="num font-semibold">
+              {{ formatearMoneda(linea.subtotal) }}
+            </td>
+            <td data-col="" class="text-right">
+              <button class="btn-mini-riesgo" @click="quitarLinea(linea.productId)">Quitar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-      <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="ticket mt-3 flex flex-col gap-5 px-5 pb-5 pt-7 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wide text-cascara-600">
-            Total ({{ formatearNumero(unidades) }}
-            {{ unidades === 1 ? 'unidad' : 'unidades' }})
-          </p>
-          <p class="text-3xl font-bold text-cascara-800">{{ formatearMoneda(total) }}</p>
+          <p class="rotulo text-cascara-400">Total a cobrar</p>
+          <p class="ticket-monto mt-1.5">{{ formatearMoneda(total) }}</p>
         </div>
 
         <div class="flex gap-2">
-          <button class="btn-suave" :disabled="detalle.length === 0 || isPending" @click="vaciar">
+          <button
+            class="btn-ticket-suave"
+            type="button"
+            :disabled="detalle.length === 0 || isPending"
+            @click="vaciar"
+          >
             Vaciar
           </button>
           <button
-            class="btn-venta"
+            class="btn-ticket"
+            type="button"
             :disabled="detalle.length === 0 || isPending"
             @click="registrarVenta"
           >

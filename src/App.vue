@@ -47,40 +47,40 @@ async function salir() {
 <template>
   <RouterView v-if="enLogin" />
 
-  <div v-else class="min-h-screen bg-cascara-50">
-    <header class="bg-gradient-to-r from-cascara-800 via-cascara-700 to-cascara-600 shadow-md">
-      <div
-        class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div class="flex items-center gap-3">
-          <img src="/favicon.svg" alt="" class="h-10 w-10 drop-shadow" />
-          <div>
-            <h1 class="text-xl font-bold tracking-tight text-nuez-100">Alita Secos</h1>
-            <p class="text-sm text-cascara-200">Control de inventario y ventas</p>
-          </div>
-        </div>
+  <div v-else class="flex min-h-screen flex-col bg-kraft-50">
+    <header class="bg-tostado-900 text-kraft-50">
+      <div class="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <RouterLink to="/" class="flex items-center gap-3">
+          <img src="/favicon.svg" alt="" class="h-9 w-9" />
+          <span class="leading-tight">
+            <span class="block font-display text-[19px] font-bold tracking-[-0.02em]">
+              Alita Secos
+            </span>
+            <span class="rotulo block text-cascara-400">Frutos secos</span>
+          </span>
+        </RouterLink>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <nav class="flex gap-1 rounded-xl bg-cascara-900/25 p-1">
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <nav class="flex gap-6">
             <RouterLink
               v-for="enlace in enlaces"
               :key="enlace.nombre"
               :to="enlace.ruta"
-              class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+              class="border-b-2 pb-1 font-sans text-[13px] font-semibold uppercase tracking-[0.1em] transition-colors"
               :class="
                 route.name === enlace.nombre
-                  ? 'bg-nuez-100 text-cascara-800 shadow'
-                  : 'text-cascara-100 hover:bg-cascara-600/60 hover:text-white'
+                  ? 'border-piel-500 text-kraft-50'
+                  : 'border-transparent text-cascara-400 hover:text-kraft-100'
               "
             >
               {{ enlace.texto }}
             </RouterLink>
           </nav>
 
-          <div class="flex items-center gap-2 border-l border-cascara-500/50 pl-3">
-            <span class="text-sm font-medium text-cascara-100">{{ sesion?.displayName }}</span>
+          <div class="flex items-center gap-3 sm:border-l sm:border-tostado-700 sm:pl-6">
+            <span class="text-[13px] text-cascara-400">{{ sesion?.displayName }}</span>
             <button
-              class="rounded-lg px-3 py-1.5 text-sm font-semibold text-cascara-200 transition-colors hover:bg-cascara-900/30 hover:text-white"
+              class="rounded-[4px] px-2 py-1 text-[13px] font-semibold text-kraft-100 transition-colors hover:bg-tostado-700"
               type="button"
               @click="salir"
             >
@@ -91,12 +91,14 @@ async function salir() {
       </div>
     </header>
 
-    <main class="mx-auto max-w-6xl px-4 py-8">
+    <main class="mx-auto w-full max-w-6xl flex-1 px-5 py-8">
       <RouterView />
     </main>
 
-    <footer class="mx-auto max-w-6xl px-4 pb-8 text-center text-xs text-cascara-500">
-      Alita Secos · datos en tiempo real con Convex
+    <footer class="mx-auto w-full max-w-6xl px-5 pb-8">
+      <p class="rotulo border-t border-kraft-200 pt-4 text-cascara-500">
+        Alita Secos
+      </p>
     </footer>
   </div>
 </template>

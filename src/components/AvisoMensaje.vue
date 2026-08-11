@@ -7,11 +7,11 @@ defineProps<{
 
 <template>
   <p
-    class="rounded-lg border px-3 py-2 text-sm"
+    class="border-l-[3px] py-2 pl-3 text-[14px] leading-snug"
     :class="
       tipo === 'error'
-        ? 'border-piel-400/40 bg-piel-500/10 text-piel-700'
-        : 'border-cascara-400/40 bg-cascara-400/15 text-cascara-800'
+        ? 'border-piel-600 bg-piel-600/6 text-piel-700'
+        : 'border-cascara-400 bg-cascara-400/12 text-tostado-800'
     "
     role="status"
   >

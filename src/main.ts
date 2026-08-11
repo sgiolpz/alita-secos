@@ -1,6 +1,11 @@
 import { createApp } from 'vue'
 import { convexVue } from 'convex-vue'
 
+// Tipografías autohospedadas: no dependen de un CDN externo ni provocan
+// un salto de fuente al cargar.
+import '@fontsource-variable/archivo'
+import '@fontsource-variable/bricolage-grotesque'
+
 import App from './App.vue'
 import router from './router'
 import './style.css'

@@ -16,12 +16,12 @@ const lista = computed(() => productos.value ?? [])
 
 <template>
   <div class="space-y-6">
-    <div>
-      <h2 class="text-2xl font-bold text-cascara-900">Productos</h2>
-      <p class="text-cascara-600">
+    <header>
+      <h1 class="titulo-pagina">Productos</h1>
+      <p class="mt-1.5 text-[14px] text-cascara-600">
         El catálogo: qué se vende, en qué presentación y a qué precio.
       </p>
-    </div>
+    </header>
 
     <ProductForm />
 

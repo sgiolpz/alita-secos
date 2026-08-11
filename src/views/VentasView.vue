@@ -16,12 +16,12 @@ const lista = computed(() => productos.value ?? [])
 
 <template>
   <div class="space-y-6">
-    <div>
-      <h2 class="text-2xl font-bold text-cascara-900">Ventas</h2>
-      <p class="text-cascara-600">
-        Arma el carrito y registra la venta: el stock se descuenta automáticamente.
+    <header>
+      <h1 class="titulo-pagina">Ventas</h1>
+      <p class="mt-1.5 text-[14px] text-cascara-600">
+        Arma el carrito y registra la venta: el stock se descuenta solo.
       </p>
-    </div>
+    </header>
 
     <SaleCart :productos="lista" :cargando="isPending" />
 
