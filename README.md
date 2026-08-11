@@ -44,16 +44,24 @@ La app queda en `http://localhost:5173`.
 
 ## Despliegue en Vercel
 
-1. Importar el repositorio `sgiolpz/alita-secos` en Vercel (framework: **Vite**).
-2. En el dashboard de Convex → *Settings* → *Deploy keys*, generar una **Production deploy key**.
-3. En Vercel → *Settings* → *Environment Variables*, agregar `CONVEX_DEPLOY_KEY` con ese valor.
-4. El *build command* ya viene definido en `vercel.json`:
+1. En el [dashboard de Convex](https://dashboard.convex.dev), proyecto `alita-secos`, cambiar al
+   deployment **Production** → *Settings* → *Deploy keys* → **Generate a production deploy key**.
+2. En [vercel.com/new](https://vercel.com/new), importar el repositorio `sgiolpz/alita-secos`
+   (Vercel detecta **Vite** solo).
+3. Antes de dar *Deploy*, en *Environment Variables* agregar:
+
+   | Name | Value |
+   | --- | --- |
+   | `CONVEX_DEPLOY_KEY` | la clave generada en el paso 1 |
+
+4. *Deploy*. No hace falta tocar nada más: el *build command* ya viene en `vercel.json`
 
    ```
-   npx convex deploy --cmd 'npm run build'
+   npx convex deploy --cmd-url-env-var-name VITE_CONVEX_URL --cmd 'npm run build'
    ```
 
-   Ese comando publica las funciones de Convex en producción y le pasa la `VITE_CONVEX_URL` correcta al build de Vite.
+   Ese comando publica las funciones de Convex en producción y le pasa la `VITE_CONVEX_URL`
+   correcta al build de Vite. Desde ahí, cada push a `main` redespliega frontend y backend.
 
 ## Estructura
 
