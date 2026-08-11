@@ -3,10 +3,13 @@ import { computed } from 'vue'
 import { useConvexQuery } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
+import { token } from '@/lib/sesion'
 import SaleCart from '@/components/SaleCart.vue'
 import SalesHistory from '@/components/SalesHistory.vue'
 
-const { data: productos, isPending } = useConvexQuery(api.products.list)
+const { data: productos, isPending } = useConvexQuery(api.products.list, () => ({
+  token: token.value,
+}))
 
 const lista = computed(() => productos.value ?? [])
 </script>

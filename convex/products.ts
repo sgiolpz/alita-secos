@@ -1,10 +1,13 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import { requiereUsuario } from './model/auth'
 
 /** Lista todos los productos ordenados alfabéticamente. */
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
     const products = await ctx.db.query('products').collect()
     return products.sort((a, b) => a.name.localeCompare(b.name, 'es'))
   },
@@ -13,11 +16,14 @@ export const list = query({
 /** Agrega un producto nuevo al inventario. */
 export const add = mutation({
   args: {
+    token: v.string(),
     name: v.string(),
     price: v.number(),
     stock: v.number(),
   },
   handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
     const name = args.name.trim()
     if (name.length === 0) {
       throw new ConvexError('El nombre del producto es obligatorio.')
@@ -44,11 +50,14 @@ export const add = mutation({
 /** Edita el nombre y el precio de un producto. El stock se maneja con addStock / ventas. */
 export const update = mutation({
   args: {
+    token: v.string(),
     id: v.id('products'),
     name: v.string(),
     price: v.number(),
   },
   handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
     const product = await ctx.db.get(args.id)
     if (!product) {
       throw new ConvexError('El producto ya no existe.')
@@ -77,10 +86,13 @@ export const update = mutation({
 /** Suma unidades al stock (reposición de inventario). */
 export const addStock = mutation({
   args: {
+    token: v.string(),
     id: v.id('products'),
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
     const product = await ctx.db.get(args.id)
     if (!product) {
       throw new ConvexError('El producto ya no existe.')
@@ -95,8 +107,13 @@ export const addStock = mutation({
 
 /** Elimina un producto del inventario. Las ventas ya registradas no se modifican. */
 export const remove = mutation({
-  args: { id: v.id('products') },
+  args: {
+    token: v.string(),
+    id: v.id('products'),
+  },
   handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
     const product = await ctx.db.get(args.id)
     if (!product) {
       throw new ConvexError('El producto ya no existe.')

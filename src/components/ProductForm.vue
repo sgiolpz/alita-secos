@@ -4,6 +4,7 @@ import { useConvexMutation } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
 import { mensajeDeError } from '@/lib/errores'
+import { token } from '@/lib/sesion'
 import AvisoMensaje from './AvisoMensaje.vue'
 
 const nombre = ref('')
@@ -35,6 +36,7 @@ async function enviar() {
 
   try {
     await agregarProducto({
+      token: token.value,
       name: nombreLimpio,
       price: precio.value,
       stock: stock.value,

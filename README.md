@@ -2,8 +2,9 @@
 
 Aplicación web para llevar el **inventario** y registrar las **ventas** de Alita Secos.
 
-- **Inventario** (`/`): agregar productos, editar nombre y precio, reponer stock y eliminar productos.
-- **Ventas** (`/ventas`): armar un carrito con varios productos y registrar la venta. El stock se descuenta solo, en una operación atómica.
+- **Ventas** (`/`): armar un carrito con varios productos y registrar la venta. El stock se descuenta solo, en una operación atómica. Es la primera pantalla al ingresar.
+- **Inventario** (`/inventario`): agregar productos, editar nombre y precio, reponer stock y eliminar productos.
+- **Acceso** (`/login`): la app es privada. Sin sesión no se ve ninguna pantalla.
 
 Los datos se sincronizan en tiempo real: si registras una venta, el stock de la pantalla de Inventario se actualiza sin recargar la página.
 
@@ -16,6 +17,25 @@ Los datos se sincronizan en tiempo real: si registras una venta, el stock de la 
 | Backend y base de datos | Convex |
 | Repositorio | GitHub |
 | Hosting | Vercel |
+
+## Acceso y usuarios
+
+La app **no tiene registro ni recuperación de contraseña**: las cuentas se crean a mano desde la
+terminal. Las contraseñas se guardan hasheadas con PBKDF2-SHA256 (100.000 iteraciones y sal por
+usuario), nunca en texto plano.
+
+Toda query y mutation del backend exige un token de sesión válido, así que la protección no es solo
+de interfaz: sin iniciar sesión tampoco se puede leer ni escribir llamando a la API directamente.
+
+Para crear un usuario o cambiarle la contraseña:
+
+```bash
+npx convex run auth:guardarUsuario '{"username":"nombre","displayName":"Nombre","password":"nueva-clave"}'
+```
+
+Agregar `--prod` para hacerlo en producción en vez del deployment de desarrollo. Si el usuario ya
+existe, se le actualiza la contraseña y se cierran sus sesiones abiertas. La función es
+`internalMutation`, o sea que no se puede llamar desde el navegador.
 
 ## Requisitos
 
@@ -67,12 +87,15 @@ La app queda en `http://localhost:5173`.
 
 ```
 convex/          Backend: esquema y funciones (queries y mutations)
-  schema.ts      Tablas products y sales
+  schema.ts      Tablas users, sessions, products y sales
+  auth.ts        iniciarSesion, cerrarSesion, sesionActual, guardarUsuario (interna)
+  model/auth.ts  Hasheo PBKDF2 y validación de sesión reutilizada por el resto
   products.ts    list, add, update, addStock, remove
   sales.ts       list, create (descuenta stock de forma transaccional)
 src/
-  views/         Las dos pantallas: InventarioView y VentasView
+  views/         VentasView, InventarioView y LoginView
   components/    Formulario, tabla, carrito e historial
-  lib/           Formato de moneda/fecha y manejo de errores
+  router/        Rutas y guardia que exige sesión
+  lib/           Sesión en el navegador, formato de moneda/fecha y errores
   style.css      Tailwind + paleta de colores
 ```

@@ -4,10 +4,13 @@ import { useConvexQuery } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
 import { formatearMoneda, formatearNumero } from '@/lib/format'
+import { token } from '@/lib/sesion'
 import ProductForm from '@/components/ProductForm.vue'
 import ProductTable from '@/components/ProductTable.vue'
 
-const { data: productos, isPending } = useConvexQuery(api.products.list)
+const { data: productos, isPending } = useConvexQuery(api.products.list, () => ({
+  token: token.value,
+}))
 
 const lista = computed(() => productos.value ?? [])
 const unidadesTotales = computed(() => lista.value.reduce((suma, p) => suma + p.stock, 0))

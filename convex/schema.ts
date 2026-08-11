@@ -2,6 +2,23 @@ import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
 export default defineSchema({
+  // Los usuarios se crean solo desde la terminal (internal.auth.guardarUsuario):
+  // la app no tiene registro abierto.
+  users: defineTable({
+    username: v.string(),
+    displayName: v.string(),
+    passwordHash: v.string(),
+    passwordSalt: v.string(),
+  }).index('by_username', ['username']),
+
+  sessions: defineTable({
+    userId: v.id('users'),
+    token: v.string(),
+    expiresAt: v.number(),
+  })
+    .index('by_token', ['token'])
+    .index('by_user', ['userId']),
+
   products: defineTable({
     name: v.string(),
     price: v.number(),

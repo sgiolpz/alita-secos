@@ -4,8 +4,9 @@ import { useConvexQuery } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
 import { formatearFecha, formatearMoneda, formatearNumero } from '@/lib/format'
+import { token } from '@/lib/sesion'
 
-const { data: ventas, isPending } = useConvexQuery(api.sales.list)
+const { data: ventas, isPending } = useConvexQuery(api.sales.list, () => ({ token: token.value }))
 
 const lista = computed(() => ventas.value ?? [])
 const recaudado = computed(() => lista.value.reduce((suma, venta) => suma + venta.total, 0))

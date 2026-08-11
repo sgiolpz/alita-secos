@@ -1,11 +1,14 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import type { Id } from './_generated/dataModel'
+import { requiereUsuario } from './model/auth'
 
 /** Últimas ventas registradas, de la más reciente a la más antigua. */
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
     return await ctx.db.query('sales').order('desc').take(50)
   },
 })
@@ -18,6 +21,7 @@ export const list = query({
  */
 export const create = mutation({
   args: {
+    token: v.string(),
     items: v.array(
       v.object({
         productId: v.id('products'),
@@ -26,6 +30,8 @@ export const create = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
     if (args.items.length === 0) {
       throw new ConvexError('La venta no tiene productos.')
     }

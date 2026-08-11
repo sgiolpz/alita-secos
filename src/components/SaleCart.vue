@@ -6,6 +6,7 @@ import { api } from '../../convex/_generated/api'
 import type { Doc, Id } from '../../convex/_generated/dataModel'
 import { formatearMoneda, formatearNumero } from '@/lib/format'
 import { mensajeDeError } from '@/lib/errores'
+import { token } from '@/lib/sesion'
 import AvisoMensaje from './AvisoMensaje.vue'
 
 const props = defineProps<{
@@ -145,6 +146,7 @@ async function registrarVenta() {
   const totalVenta = total.value
   try {
     await registrar({
+      token: token.value,
       items: carrito.value.map((linea) => ({
         productId: linea.productId,
         quantity: linea.quantity,

@@ -6,6 +6,7 @@ import { api } from '../../convex/_generated/api'
 import type { Doc, Id } from '../../convex/_generated/dataModel'
 import { formatearMoneda, formatearNumero } from '@/lib/format'
 import { mensajeDeError } from '@/lib/errores'
+import { token } from '@/lib/sesion'
 import AvisoMensaje from './AvisoMensaje.vue'
 
 defineProps<{
@@ -65,7 +66,12 @@ async function guardarEdicion(id: Id<'products'>) {
     return
   }
   try {
-    await actualizar({ id, name: editNombre.value.trim(), price: editPrecio.value })
+    await actualizar({
+      token: token.value,
+      id,
+      name: editNombre.value.trim(),
+      price: editPrecio.value,
+    })
     cerrarTodo()
   } catch (e) {
     error.value = mensajeDeError(e)
@@ -79,7 +85,7 @@ async function confirmarReposicion(id: Id<'products'>) {
     return
   }
   try {
-    await reponer({ id, quantity: cantidadRepo.value })
+    await reponer({ token: token.value, id, quantity: cantidadRepo.value })
     cerrarTodo()
   } catch (e) {
     error.value = mensajeDeError(e)
@@ -89,7 +95,7 @@ async function confirmarReposicion(id: Id<'products'>) {
 async function confirmarEliminacion(id: Id<'products'>) {
   error.value = ''
   try {
-    await eliminar({ id })
+    await eliminar({ token: token.value, id })
     cerrarTodo()
   } catch (e) {
     error.value = mensajeDeError(e)
