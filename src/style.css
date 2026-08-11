@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+
+/* Paleta "maní natural con cáscara":
+   cascara = tonos de la cáscara tostada, nuez = el interior claro del maní,
+   piel = el rojizo de la piel que envuelve al grano. */
+@theme {
+  --color-cascara-50: #fbf7f0;
+  --color-cascara-100: #f3e9d8;
+  --color-cascara-200: #e8d6b8;
+  --color-cascara-300: #d9be92;
+  --color-cascara-400: #c7a46d;
+  --color-cascara-500: #b08853;
+  --color-cascara-600: #946c3e;
+  --color-cascara-700: #75532f;
+  --color-cascara-800: #573d24;
+  --color-cascara-900: #3b2a1a;
+
+  --color-nuez-50: #fdf9f1;
+  --color-nuez-100: #f7efdf;
+  --color-nuez-200: #efe1c6;
+
+  --color-piel-400: #b9683c;
+  --color-piel-500: #a0522d;
+  --color-piel-600: #83411f;
+  --color-piel-700: #6a3419;
+
+  --font-sans:
+    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-cascara-50);
+  }
+
+  body {
+    @apply bg-cascara-50 text-cascara-900 font-sans antialiased;
+  }
+
+  /* Oculta las flechitas de los input[type=number] para que las tablas respiren. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  .campo {
+    @apply w-full rounded-lg border border-cascara-300 bg-white px-3 py-2 text-cascara-900
+           placeholder:text-cascara-400 focus:border-cascara-500 focus:outline-none
+           focus:ring-2 focus:ring-cascara-500/30 disabled:opacity-60;
+  }
+
+  .etiqueta {
+    @apply mb-1 block text-sm font-medium text-cascara-700;
+  }
+
+  .btn,
+  .btn-primario,
+  .btn-venta,
+  .btn-suave {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm
+           font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primario {
+    @apply bg-cascara-600 text-white hover:bg-cascara-700;
+  }
+
+  .btn-venta {
+    @apply bg-piel-500 text-white hover:bg-piel-600;
+  }
+
+  .btn-suave {
+    @apply border border-cascara-300 bg-white text-cascara-700 hover:bg-cascara-100;
+  }
+
+  .btn-mini {
+    @apply inline-flex items-center gap-1 rounded-md border border-cascara-300 bg-white px-2.5
+           py-1 text-xs font-semibold text-cascara-700 transition-colors hover:bg-cascara-100
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .tarjeta {
+    @apply rounded-2xl border border-cascara-200 bg-nuez-100 shadow-sm;
+  }
+}

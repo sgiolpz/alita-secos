@@ -1,0 +1,27 @@
+{
+  "name": "alita-secos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "convex": "convex dev"
+  },
+  "dependencies": {
+    "convex": "^1.43.0",
+    "convex-vue": "^0.1.5",
+    "vue": "^3.5.41",
+    "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.2.0",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9",
+    "vite": "^8.2.1",
+    "vue-tsc": "^3.3.9"
+  }
+}
