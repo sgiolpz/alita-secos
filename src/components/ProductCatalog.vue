@@ -93,7 +93,9 @@ async function confirmarEliminacion(id: Id<'products'>) {
   <section class="panel overflow-hidden">
     <div class="panel-cabecera">
       <h2 class="titulo-seccion">Catálogo</h2>
-      <span class="rotulo">{{ productos.length }} productos</span>
+      <span class="rotulo">
+        {{ productos.length }} {{ productos.length === 1 ? 'producto' : 'productos' }}
+      </span>
     </div>
 
     <div v-if="error" class="px-5 pt-4">
