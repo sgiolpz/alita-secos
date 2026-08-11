@@ -5,8 +5,7 @@ import { useConvexQuery } from 'convex-vue'
 import { api } from '../../convex/_generated/api'
 import { formatearMoneda, formatearNumero } from '@/lib/format'
 import { token } from '@/lib/sesion'
-import ProductForm from '@/components/ProductForm.vue'
-import ProductTable from '@/components/ProductTable.vue'
+import StockTable from '@/components/StockTable.vue'
 
 const { data: productos, isPending } = useConvexQuery(api.products.list, () => ({
   token: token.value,
@@ -31,7 +30,9 @@ const resumen = computed(() => [
   <div class="space-y-6">
     <div>
       <h2 class="text-2xl font-bold text-cascara-900">Inventario</h2>
-      <p class="text-cascara-600">Agrega productos y repone stock cuando llegue mercadería.</p>
+      <p class="text-cascara-600">
+        Cuánto queda de cada producto. Usa "+ Stock" cuando llegue mercadería.
+      </p>
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -48,8 +49,6 @@ const resumen = computed(() => [
       </div>
     </div>
 
-    <ProductForm />
-
-    <ProductTable :productos="lista" :cargando="isPending" />
+    <StockTable :productos="lista" :cargando="isPending" />
   </div>
 </template>

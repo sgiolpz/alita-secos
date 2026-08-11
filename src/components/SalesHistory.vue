@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useConvexQuery } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
-import { formatearFecha, formatearMoneda, formatearNumero } from '@/lib/format'
+import { formatearFecha, formatearMoneda, formatearNumero, nombreCompleto } from '@/lib/format'
 import { token } from '@/lib/sesion'
 
 const { data: ventas, isPending } = useConvexQuery(api.sales.list, () => ({ token: token.value }))
@@ -43,7 +43,7 @@ const recaudado = computed(() => lista.value.reduce((suma, venta) => suma + vent
           >
             <span>
               <span class="font-medium">{{ item.quantity }}×</span>
-              {{ item.name }}
+              {{ nombreCompleto(item.name, item.size, item.unit) }}
               <span class="text-cascara-500">a {{ formatearMoneda(item.price) }}</span>
             </span>
             <span>{{ formatearMoneda(item.price * item.quantity) }}</span>

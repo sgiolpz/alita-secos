@@ -12,6 +12,7 @@ const router = useRouter()
 const enlaces = [
   { nombre: 'ventas', ruta: '/', texto: 'Ventas' },
   { nombre: 'inventario', ruta: '/inventario', texto: 'Inventario' },
+  { nombre: 'productos', ruta: '/productos', texto: 'Productos' },
 ]
 
 const enLogin = computed(() => route.name === 'login')

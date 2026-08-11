@@ -59,7 +59,14 @@ export const create = mutation({
         )
       }
 
-      lines.push({ productId, name: product.name, price: product.price, quantity })
+      lines.push({
+        productId,
+        name: product.name,
+        size: product.size,
+        unit: product.unit,
+        price: product.price,
+        quantity,
+      })
       total += product.price * quantity
     }
 

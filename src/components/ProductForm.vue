@@ -3,13 +3,15 @@ import { ref } from 'vue'
 import { useConvexMutation } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
+import { UNIDADES, type UnidadProducto } from '@/lib/format'
 import { mensajeDeError } from '@/lib/errores'
 import { token } from '@/lib/sesion'
 import AvisoMensaje from './AvisoMensaje.vue'
 
 const nombre = ref('')
+const peso = ref<number | null>(null)
+const unidad = ref<UnidadProducto>('g')
 const precio = ref<number | null>(null)
-const stock = ref<number | null>(null)
 
 const error = ref('')
 const exito = ref('')
@@ -25,12 +27,12 @@ async function enviar() {
     error.value = 'Escribe el nombre del producto.'
     return
   }
-  if (precio.value === null || precio.value < 0) {
-    error.value = 'Indica un precio válido.'
+  if (peso.value === null || peso.value <= 0) {
+    error.value = 'Indica el peso o la cantidad del producto.'
     return
   }
-  if (stock.value === null || !Number.isInteger(stock.value) || stock.value < 0) {
-    error.value = 'El stock inicial debe ser un número entero mayor o igual a 0.'
+  if (precio.value === null || precio.value < 0) {
+    error.value = 'Indica un precio válido.'
     return
   }
 
@@ -38,13 +40,14 @@ async function enviar() {
     await agregarProducto({
       token: token.value,
       name: nombreLimpio,
+      size: peso.value,
+      unit: unidad.value,
       price: precio.value,
-      stock: stock.value,
     })
-    exito.value = `"${nombreLimpio}" se agregó al inventario.`
+    exito.value = `"${nombreLimpio}" se agregó al catálogo. Cárgale stock desde Inventario.`
     nombre.value = ''
+    peso.value = null
     precio.value = null
-    stock.value = null
   } catch (e) {
     error.value = mensajeDeError(e)
   }
@@ -53,9 +56,16 @@ async function enviar() {
 
 <template>
   <section class="tarjeta p-5">
-    <h2 class="mb-4 text-lg font-bold text-cascara-800">Agregar producto</h2>
+    <h2 class="text-lg font-bold text-cascara-800">Crear producto</h2>
+    <p class="mb-4 text-sm text-cascara-600">
+      El producto se crea con stock 0. Las unidades se cargan en Inventario cuando llega la
+      mercadería.
+    </p>
 
-    <form class="grid gap-4 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-end" @submit.prevent="enviar">
+    <form
+      class="grid gap-4 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] sm:items-end"
+      @submit.prevent="enviar"
+    >
       <div>
         <label class="etiqueta" for="nombre">Nombre</label>
         <input
@@ -63,9 +73,31 @@ async function enviar() {
           v-model="nombre"
           class="campo"
           type="text"
-          placeholder="Maní con cáscara 500 g"
+          placeholder="Maní con cáscara"
           autocomplete="off"
         />
+      </div>
+
+      <div>
+        <label class="etiqueta" for="peso">Peso</label>
+        <input
+          id="peso"
+          v-model.number="peso"
+          class="campo"
+          type="number"
+          min="1"
+          step="1"
+          placeholder="500"
+        />
+      </div>
+
+      <div>
+        <label class="etiqueta" for="unidad">Unidad</label>
+        <select id="unidad" v-model="unidad" class="campo">
+          <option v-for="opcion in UNIDADES" :key="opcion.valor" :value="opcion.valor">
+            {{ opcion.etiqueta }}
+          </option>
+        </select>
       </div>
 
       <div>
@@ -81,21 +113,8 @@ async function enviar() {
         />
       </div>
 
-      <div>
-        <label class="etiqueta" for="stock">Stock inicial</label>
-        <input
-          id="stock"
-          v-model.number="stock"
-          class="campo"
-          type="number"
-          min="0"
-          step="1"
-          placeholder="20"
-        />
-      </div>
-
       <button class="btn-primario h-[42px]" type="submit" :disabled="isPending">
-        {{ isPending ? 'Guardando…' : 'Agregar' }}
+        {{ isPending ? 'Guardando…' : 'Crear' }}
       </button>
     </form>
 

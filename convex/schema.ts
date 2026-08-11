@@ -19,8 +19,16 @@ export default defineSchema({
     .index('by_token', ['token'])
     .index('by_user', ['userId']),
 
+  // `size` + `unit` es la presentación del producto: 500 g, o 12 un. para lo
+  // que se vende por cantidad. Dos productos pueden compartir nombre si su
+  // presentación es distinta.
+  //
+  // Son opcionales solo por los productos creados antes de que existiera el
+  // campo: el formulario siempre los exige.
   products: defineTable({
     name: v.string(),
+    size: v.optional(v.number()),
+    unit: v.optional(v.union(v.literal('g'), v.literal('un'))),
     price: v.number(),
     stock: v.number(),
   }).index('by_name', ['name']),
@@ -32,6 +40,10 @@ export default defineSchema({
       v.object({
         productId: v.id('products'),
         name: v.string(),
+        // Opcionales: las ventas anteriores a que existiera la presentación
+        // no la tienen, y una venta ya registrada no se reescribe.
+        size: v.optional(v.number()),
+        unit: v.optional(v.union(v.literal('g'), v.literal('un'))),
         price: v.number(),
         quantity: v.number(),
       }),

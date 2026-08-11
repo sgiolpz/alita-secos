@@ -4,7 +4,7 @@ import { useConvexMutation } from 'convex-vue'
 
 import { api } from '../../convex/_generated/api'
 import type { Doc, Id } from '../../convex/_generated/dataModel'
-import { formatearMoneda, formatearNumero } from '@/lib/format'
+import { formatearMoneda, formatearNumero, nombreCompleto } from '@/lib/format'
 import { mensajeDeError } from '@/lib/errores'
 import { token } from '@/lib/sesion'
 import AvisoMensaje from './AvisoMensaje.vue'
@@ -62,7 +62,7 @@ const detalle = computed(() =>
     return [
       {
         productId: linea.productId,
-        name: producto.name,
+        name: nombreCompleto(producto.name, producto.size, producto.unit),
         price: producto.price,
         stock: producto.stock,
         quantity: linea.quantity,
@@ -167,7 +167,8 @@ async function registrarVenta() {
     <p v-if="cargando" class="py-6 text-center text-cascara-600">Cargando productos…</p>
 
     <p v-else-if="productos.length === 0" class="py-6 text-center text-cascara-600">
-      No hay productos en el inventario. Agrega productos antes de vender.
+      No hay productos en el catálogo. Créalos en la pantalla Productos y cárgales stock en
+      Inventario.
     </p>
 
     <template v-else>
@@ -185,9 +186,8 @@ async function registrarVenta() {
               :value="producto._id"
               :disabled="disponible(producto) <= 0"
             >
-              {{ producto.name }} — {{ formatearMoneda(producto.price) }} ({{
-                formatearNumero(disponible(producto))
-              }}
+              {{ nombreCompleto(producto.name, producto.size, producto.unit) }} —
+              {{ formatearMoneda(producto.price) }} ({{ formatearNumero(disponible(producto)) }}
               disp.)
             </option>
           </select>

@@ -13,13 +13,23 @@ export const list = query({
   },
 })
 
-/** Agrega un producto nuevo al inventario. */
+const unidadValidador = v.union(v.literal('g'), v.literal('un'))
+
+function medidaLegible(size: number, unit: 'g' | 'un'): string {
+  return unit === 'g' ? `${size} g` : `${size} un.`
+}
+
+/**
+ * Crea un producto en el catálogo. Nace con stock 0: las unidades se cargan
+ * después desde Inventario, cuando llega la mercadería.
+ */
 export const add = mutation({
   args: {
     token: v.string(),
     name: v.string(),
+    size: v.number(),
+    unit: unidadValidador,
     price: v.number(),
-    stock: v.number(),
   },
   handler: async (ctx, args) => {
     await requiereUsuario(ctx, args.token)
@@ -28,31 +38,41 @@ export const add = mutation({
     if (name.length === 0) {
       throw new ConvexError('El nombre del producto es obligatorio.')
     }
+    if (!Number.isFinite(args.size) || args.size <= 0) {
+      throw new ConvexError('El peso debe ser un número mayor a 0.')
+    }
     if (!Number.isFinite(args.price) || args.price < 0) {
       throw new ConvexError('El precio no puede ser negativo.')
     }
-    if (!Number.isInteger(args.stock) || args.stock < 0) {
-      throw new ConvexError('El stock inicial debe ser un número entero mayor o igual a 0.')
-    }
 
-    const existing = await ctx.db
+    // Se permite repetir el nombre con otra presentación (250 g y 500 g),
+    // pero no la misma presentación dos veces.
+    const mismoNombre = await ctx.db
       .query('products')
       .withIndex('by_name', (q) => q.eq('name', name))
-      .first()
-    if (existing) {
-      throw new ConvexError(`Ya existe un producto llamado "${name}".`)
+      .collect()
+    if (mismoNombre.some((p) => p.size === args.size && p.unit === args.unit)) {
+      throw new ConvexError(`Ya existe "${name}" de ${medidaLegible(args.size, args.unit)}.`)
     }
 
-    return await ctx.db.insert('products', { name, price: args.price, stock: args.stock })
+    return await ctx.db.insert('products', {
+      name,
+      size: args.size,
+      unit: args.unit,
+      price: args.price,
+      stock: 0,
+    })
   },
 })
 
-/** Edita el nombre y el precio de un producto. El stock se maneja con addStock / ventas. */
+/** Edita los datos del catálogo. El stock se maneja con addStock / ventas. */
 export const update = mutation({
   args: {
     token: v.string(),
     id: v.id('products'),
     name: v.string(),
+    size: v.number(),
+    unit: unidadValidador,
     price: v.number(),
   },
   handler: async (ctx, args) => {
@@ -67,19 +87,30 @@ export const update = mutation({
     if (name.length === 0) {
       throw new ConvexError('El nombre del producto es obligatorio.')
     }
+    if (!Number.isFinite(args.size) || args.size <= 0) {
+      throw new ConvexError('El peso debe ser un número mayor a 0.')
+    }
     if (!Number.isFinite(args.price) || args.price < 0) {
       throw new ConvexError('El precio no puede ser negativo.')
     }
 
-    const duplicate = await ctx.db
+    const mismoNombre = await ctx.db
       .query('products')
       .withIndex('by_name', (q) => q.eq('name', name))
-      .first()
-    if (duplicate && duplicate._id !== args.id) {
-      throw new ConvexError(`Ya existe otro producto llamado "${name}".`)
+      .collect()
+    const duplicado = mismoNombre.some(
+      (p) => p._id !== args.id && p.size === args.size && p.unit === args.unit,
+    )
+    if (duplicado) {
+      throw new ConvexError(`Ya existe "${name}" de ${medidaLegible(args.size, args.unit)}.`)
     }
 
-    await ctx.db.patch(args.id, { name, price: args.price })
+    await ctx.db.patch(args.id, {
+      name,
+      size: args.size,
+      unit: args.unit,
+      price: args.price,
+    })
   },
 })
 
