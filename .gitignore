@@ -10,6 +10,9 @@ dist-ssr
 # Vercel
 .vercel
 
+# Enlaces locales a las skills: la copia versionada vive en .agents/skills
+.claude/skills
+
 # Editores / SO
 .DS_Store
 Thumbs.db
