@@ -3,14 +3,18 @@
 Aplicación web para llevar el **inventario** y registrar las **ventas** de Alita Secos.
 
 - **Ventas** (`/`): armar un carrito con varios productos y registrar la venta. El stock se descuenta solo, en una operación atómica. Es la primera pantalla al ingresar.
-- **Inventario** (`/inventario`): cuánto queda de cada producto y reposición de stock cuando llega mercadería.
+- **Inventario** (`/inventario`): quién tiene qué. Se recibe mercadería a nombre de una persona y se pueden traspasar unidades de una a otra.
 - **Productos** (`/productos`): el catálogo. Crear productos con nombre, peso y precio, editarlos y eliminarlos.
 - **Acceso** (`/login`): la app es privada. Sin sesión no se ve ninguna pantalla.
 
 Un producto se define por su nombre y su **presentación**: 500 g, o 12 un. para lo que se vende por
 cantidad. Por eso pueden coexistir "Maní con cáscara" de 250 g y de 500 g como productos distintos;
-lo que no se permite es repetir la misma presentación. Los productos nacen con stock 0: crear el
-producto y recibir mercadería son dos momentos separados.
+lo que no se permite es repetir la misma presentación.
+
+**El catálogo es compartido, la mercadería tiene dueño.** Todos ven los mismos productos y el
+reparto completo del stock, pero cada quien vende solo lo suyo: al registrar una venta se descuenta
+del stock de quien inició sesión, y la venta queda a su nombre. Los productos nacen sin stock; la
+mercadería se recibe después, a nombre de quien la va a vender.
 
 Los datos se sincronizan en tiempo real: si registras una venta, el stock de la pantalla de Inventario se actualiza sin recargar la página.
 
@@ -93,11 +97,13 @@ La app queda en `http://localhost:5173`.
 
 ```
 convex/          Backend: esquema y funciones (queries y mutations)
-  schema.ts      Tablas users, sessions, products (name, size, unit, price, stock) y sales
-  auth.ts        iniciarSesion, cerrarSesion, sesionActual, guardarUsuario (interna)
-  model/auth.ts  Hasheo PBKDF2 y validación de sesión reutilizada por el resto
-  products.ts    list, add, update, addStock, remove
-  sales.ts       list, create (descuenta stock de forma transaccional)
+  schema.ts       Tablas users, sessions, products, stocks y sales
+  auth.ts         iniciarSesion, cerrarSesion, sesionActual, guardarUsuario (interna)
+  users.ts        list: las personas del local, para elegir dueño de stock
+  model/auth.ts   Hasheo PBKDF2 y validación de sesión, reutilizados por el resto
+  model/stock.ts  Lectura y ajuste del stock por persona
+  products.ts     list, add, update, receiveStock, transferStock, remove
+  sales.ts        list, create (descuenta del vendedor, de forma transaccional)
 src/
   views/         VentasView, InventarioView, ProductosView y LoginView
   components/    ProductForm y ProductCatalog (catálogo), StockTable (inventario),

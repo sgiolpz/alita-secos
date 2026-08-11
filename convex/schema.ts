@@ -30,9 +30,6 @@ export default defineSchema({
     size: v.optional(v.number()),
     unit: v.optional(v.union(v.literal('g'), v.literal('un'))),
     price: v.number(),
-    // Campo histórico: el stock ahora vive en la tabla `stocks`, repartido por
-    // persona. Se conserva como opcional hasta terminar de migrarlo.
-    stock: v.optional(v.number()),
   }).index('by_name', ['name']),
 
   // La mercadería sí tiene dueño: cada quien vende de lo suyo.
