@@ -101,15 +101,24 @@
 
   /* --- Formularios ------------------------------------------------------- */
 
+  /* `leading-6` es lo que iguala la altura: un <select> calcula su caja de
+     forma distinta a un <input> y sin interlineado explícito queda más bajo. */
   .campo {
     @apply w-full rounded-[5px] border border-kraft-300 bg-nuez-50 px-3 py-2 text-[15px]
-           text-tostado-900 transition-colors placeholder:text-cascara-500/70
+           leading-6 text-tostado-900 transition-colors placeholder:text-cascara-500/70
            focus:border-piel-600 focus:outline-none focus:ring-[3px] focus:ring-piel-600/15
            disabled:opacity-60;
   }
 
+  /* Chrome le da al <select> una caja nativa que ignora el interlineado, así
+     que queda más bajo que un <input>. Quitándole la apariencia nativa vuelve
+     a medir igual, y de paso la flecha deja de ser la del sistema y toma el
+     color de la paleta. */
   select.campo {
-    @apply pr-8;
+    @apply appearance-none bg-no-repeat pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%238a6e45' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-position: right 0.7rem center;
+    background-size: 11px 7px;
   }
 
   .etiqueta {

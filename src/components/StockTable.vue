@@ -145,7 +145,7 @@ async function confirmarTraspaso(id: Id<'products'>) {
         <thead>
           <tr>
             <th>Producto</th>
-            <th class="num">Peso</th>
+            <th class="num">Cantidad</th>
             <th class="num">Precio</th>
             <th v-for="usuario in usuarios" :key="usuario._id" class="num">
               {{ usuario.displayName }}
@@ -159,7 +159,7 @@ async function confirmarTraspaso(id: Id<'products'>) {
           <template v-for="producto in productos" :key="producto._id">
             <tr class="fila-dato" :class="producto.total === 0 ? 'bg-piel-600/4' : ''">
               <td data-col="Producto" class="font-semibold">{{ producto.name }}</td>
-              <td data-col="Peso" class="num text-cascara-600">
+              <td data-col="Cantidad" class="num text-cascara-600">
                 {{ formatearMedida(producto.size, producto.unit) }}
               </td>
               <td data-col="Precio" class="num">{{ formatearMoneda(producto.price) }}</td>

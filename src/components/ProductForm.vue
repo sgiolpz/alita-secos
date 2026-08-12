@@ -28,7 +28,7 @@ async function enviar() {
     return
   }
   if (peso.value === null || peso.value <= 0) {
-    error.value = 'Indica el peso o la cantidad del producto.'
+    error.value = 'Indica la cantidad del producto.'
     return
   }
   if (precio.value === null || precio.value < 0) {
@@ -62,7 +62,7 @@ async function enviar() {
     </div>
 
     <form
-      class="grid gap-4 px-5 py-5 sm:grid-cols-[2fr_110px_150px_140px_auto] sm:items-end"
+      class="grid gap-4 px-5 py-5 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] sm:items-end"
       @submit.prevent="enviar"
     >
       <div>
@@ -78,7 +78,7 @@ async function enviar() {
       </div>
 
       <div>
-        <label class="etiqueta" for="peso">Peso</label>
+        <label class="etiqueta" for="peso">Cantidad</label>
         <input
           id="peso"
           v-model.number="peso"
@@ -86,7 +86,7 @@ async function enviar() {
           type="number"
           min="1"
           step="1"
-          placeholder="500"
+          placeholder="100"
         />
       </div>
 
@@ -108,7 +108,7 @@ async function enviar() {
           type="number"
           min="0"
           step="1"
-          placeholder="2990"
+          placeholder="1000"
         />
       </div>
 

@@ -76,7 +76,7 @@ export const add = mutation({
       throw new ConvexError('El nombre del producto es obligatorio.')
     }
     if (!Number.isFinite(args.size) || args.size <= 0) {
-      throw new ConvexError('El peso debe ser un número mayor a 0.')
+      throw new ConvexError('La cantidad debe ser un número mayor a 0.')
     }
     if (!Number.isFinite(args.price) || args.price < 0) {
       throw new ConvexError('El precio no puede ser negativo.')
@@ -124,7 +124,7 @@ export const update = mutation({
       throw new ConvexError('El nombre del producto es obligatorio.')
     }
     if (!Number.isFinite(args.size) || args.size <= 0) {
-      throw new ConvexError('El peso debe ser un número mayor a 0.')
+      throw new ConvexError('La cantidad debe ser un número mayor a 0.')
     }
     if (!Number.isFinite(args.price) || args.price < 0) {
       throw new ConvexError('El precio no puede ser negativo.')

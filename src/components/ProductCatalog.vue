@@ -56,7 +56,7 @@ async function guardarEdicion(id: Id<'products'>) {
     return
   }
   if (editPeso.value === null || editPeso.value <= 0) {
-    error.value = 'Indica el peso o la cantidad del producto.'
+    error.value = 'Indica la cantidad del producto.'
     return
   }
   if (editPrecio.value === null || editPrecio.value < 0) {
@@ -115,7 +115,7 @@ async function confirmarEliminacion(id: Id<'products'>) {
       <thead>
         <tr>
           <th>Producto</th>
-          <th class="num">Peso</th>
+          <th class="num">Cantidad</th>
           <th class="num">Precio</th>
           <th class="num">Stock</th>
           <th></th>
@@ -136,7 +136,7 @@ async function confirmarEliminacion(id: Id<'products'>) {
               <span v-else class="font-semibold">{{ producto.name }}</span>
             </td>
 
-            <td data-col="Peso" class="num">
+            <td data-col="Cantidad" class="num">
               <div v-if="editandoId === producto._id" class="flex justify-end gap-1.5">
                 <input
                   v-model.number="editPeso"
@@ -144,7 +144,7 @@ async function confirmarEliminacion(id: Id<'products'>) {
                   type="number"
                   min="1"
                   step="1"
-                  aria-label="Peso"
+                  aria-label="Cantidad"
                 />
                 <select v-model="editUnidad" class="campo w-28 py-1.5" aria-label="Unidad">
                   <option v-for="o in UNIDADES" :key="o.valor" :value="o.valor">
