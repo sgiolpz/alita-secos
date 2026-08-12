@@ -6,6 +6,7 @@ import { api } from '../../convex/_generated/api'
 import { formatearMoneda, formatearNumero } from '@/lib/format'
 import { token } from '@/lib/sesion'
 import StockTable from '@/components/StockTable.vue'
+import StockCorrectionsHistory from '@/components/StockCorrectionsHistory.vue'
 
 const { data: productos, isPending } = useConvexQuery(api.products.list, () => ({
   token: token.value,
@@ -49,5 +50,7 @@ const resumen = computed(() => [
     </div>
 
     <StockTable :productos="lista" :usuarios="gente" :cargando="isPending" />
+
+    <StockCorrectionsHistory />
   </div>
 </template>

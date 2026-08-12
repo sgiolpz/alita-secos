@@ -43,6 +43,17 @@ export default defineSchema({
     .index('by_product_user', ['productId', 'userId'])
     .index('by_user', ['userId']),
 
+  // Correcciones de stock: cuando se recibió una cantidad equivocada y hay
+  // que descontarla. Es historial, no se edita ni se borra; cada fila queda
+  // como constancia de qué se corrigió, a quién y quién lo hizo.
+  stockCorrections: defineTable({
+    productId: v.id('products'),
+    userId: v.id('users'), // dueño del stock corregido
+    performedBy: v.id('users'), // quién hizo la corrección
+    quantity: v.number(), // unidades quitadas
+    reason: v.literal('ingreso_incorrecto'),
+  }).index('by_product', ['productId']),
+
   sales: defineTable({
     // Quién vendió. Opcionales por las ventas anteriores al reparto de stock.
     userId: v.optional(v.id('users')),

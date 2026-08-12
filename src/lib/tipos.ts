@@ -16,3 +16,6 @@ export type Recaudacion = FunctionReturnType<typeof api.sales.recaudacion>
 
 /** Una fila del ranking de recaudación, sea de persona o de producto. */
 export type FilaRecaudacion = Recaudacion['porUsuario'][number]
+
+/** Una corrección de stock registrada (ingreso incorrecto, ya descontado). */
+export type Correccion = FunctionReturnType<typeof api.products.corrections>[number]
