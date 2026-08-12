@@ -182,9 +182,9 @@ async function confirmarTraspaso(id: Id<'products'>) {
                   :class="producto.total === 0 ? 'text-piel-600' : 'text-tostado-900'"
                 >
                   {{ formatearNumero(producto.total) }}
-                  <span v-if="producto.total === 0" class="rotulo text-piel-600">agotado</span>
+                  <span v-if="producto.total === 0" class="rotulo text-piel-600">· agotado</span>
                   <span v-else-if="producto.total <= 5" class="rotulo text-cascara-600">
-                    queda poco
+                    · queda poco
                   </span>
                 </span>
               </td>
