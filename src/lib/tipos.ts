@@ -10,3 +10,9 @@ export type Usuario = FunctionReturnType<typeof api.users.list>[number]
 
 /** Una venta registrada, con sus líneas. */
 export type Venta = FunctionReturnType<typeof api.sales.list>[number]
+
+/** Recaudación agregada con los filtros aplicados. */
+export type Recaudacion = FunctionReturnType<typeof api.sales.recaudacion>
+
+/** Una fila del ranking de recaudación, sea de persona o de producto. */
+export type FilaRecaudacion = Recaudacion['porUsuario'][number]
