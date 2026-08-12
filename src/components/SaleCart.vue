@@ -194,7 +194,7 @@ async function registrarVenta() {
               :value="producto._id"
               :disabled="disponible(producto) <= 0"
             >
-              {{ nombreCompleto(producto.name, producto.size, producto.unit) }}
+              {{ nombreCompleto(producto.name, producto.size, producto.unit) }} -
               {{ formatearMoneda(producto.price) }}
             </option>
           </select>
