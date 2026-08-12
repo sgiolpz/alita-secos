@@ -194,13 +194,8 @@ async function registrarVenta() {
               :value="producto._id"
               :disabled="disponible(producto) <= 0"
             >
-              {{ nombreCompleto(producto.name, producto.size, producto.unit) }} —
+              {{ nombreCompleto(producto.name, producto.size, producto.unit) }}
               {{ formatearMoneda(producto.price) }}
-              <template v-if="disponible(producto) > 0">
-                ({{ formatearNumero(disponible(producto)) }} tuyas)
-              </template>
-              <template v-else-if="producto.total > 0">(sin stock tuyo)</template>
-              <template v-else>(agotado)</template>
             </option>
           </select>
         </div>
