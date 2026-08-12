@@ -35,7 +35,7 @@ const recaudado = computed(() => lista.value.reduce((suma, venta) => suma + vent
         <div class="flex items-baseline justify-between gap-4">
           <p class="rotulo">
             {{ formatearFecha(venta._creationTime) }}
-            <span v-if="venta.sellerName" class="normal-case text-cascara-500">
+            <span v-if="venta.sellerName" class="text-cascara-500">
               · {{ venta.sellerName }}
             </span>
           </p>

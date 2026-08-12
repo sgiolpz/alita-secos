@@ -66,7 +66,7 @@ async function salir() {
               v-for="enlace in enlaces"
               :key="enlace.nombre"
               :to="enlace.ruta"
-              class="border-b-2 pb-1 font-sans text-[13px] font-semibold uppercase tracking-[0.1em] transition-colors"
+              class="border-b-2 pb-1 font-sans text-[14px] font-semibold tracking-[0.01em] transition-colors"
               :class="
                 route.name === enlace.nombre
                   ? 'border-piel-500 text-kraft-50'

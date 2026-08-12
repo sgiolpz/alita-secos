@@ -79,9 +79,10 @@
   /* --- Tipografía -------------------------------------------------------- */
 
   /* Rótulo de utilidad: encabezados de columna, epígrafes, nombres de dato.
-     Es el hilo estructural que se repite en toda la app. */
+     Es el hilo estructural que se repite en toda la app. Se distingue por
+     tamaño, peso y color, no por ir en mayúsculas. */
   .rotulo {
-    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-cascara-600;
+    @apply font-sans text-[12px] font-semibold tracking-[0.01em] text-cascara-600;
   }
 
   .titulo-pagina {
@@ -122,8 +123,7 @@
   }
 
   .etiqueta {
-    @apply mb-1.5 block font-sans text-[11px] font-semibold uppercase tracking-[0.12em]
-           text-cascara-600;
+    @apply mb-1.5 block font-sans text-[13px] font-semibold tracking-[0.01em] text-cascara-600;
   }
 
   /* --- Botones ----------------------------------------------------------- */
@@ -227,8 +227,8 @@
   }
 
   .tabla thead th {
-    @apply border-b-2 border-tostado-900/85 px-5 py-2.5 font-sans text-[11px] font-semibold
-           uppercase tracking-[0.12em] text-cascara-600;
+    @apply border-b-2 border-tostado-900/85 px-5 py-2.5 font-sans text-[12px] font-semibold
+           tracking-[0.01em] text-cascara-600;
   }
 
   .tabla tbody td {
@@ -264,7 +264,7 @@
 
     .tabla-apilable tbody tr.fila-dato td::before {
       content: attr(data-col);
-      @apply font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-cascara-600;
+      @apply font-sans text-[12px] font-semibold tracking-[0.01em] text-cascara-600;
     }
 
     .tabla-apilable tbody tr.fila-dato td[data-col='']::before {
