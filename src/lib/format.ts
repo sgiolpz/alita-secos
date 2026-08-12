@@ -6,9 +6,18 @@ const moneda = new Intl.NumberFormat('es-CL', {
 
 const numero = new Intl.NumberFormat('es-CL')
 
-const fechaHora = new Intl.DateTimeFormat('es-CL', {
-  dateStyle: 'short',
-  timeStyle: 'short',
+const hora = new Intl.DateTimeFormat('es-CL', { timeStyle: 'short' })
+
+const diaDeEsteAno = new Intl.DateTimeFormat('es-CL', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+})
+
+const diaDeOtroAno = new Intl.DateTimeFormat('es-CL', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
 })
 
 /** Formatea un monto en pesos chilenos, sin decimales. */
@@ -43,7 +52,28 @@ export function nombreCompleto(name: string, size?: number, unit?: UnidadProduct
   return `${name} ${formatearMedida(size, unit)}`
 }
 
-/** Formatea el `_creationTime` de Convex (milisegundos) como fecha y hora local. */
-export function formatearFecha(ms: number): string {
-  return fechaHora.format(new Date(ms))
+/** Solo la hora: "7:28 p. m.". El día se muestra una vez, agrupando. */
+export function formatearHora(ms: number): string {
+  return hora.format(new Date(ms))
+}
+
+/** Identifica el día natural de una marca de tiempo, para agrupar por jornada. */
+export function claveDia(ms: number): string {
+  const f = new Date(ms)
+  return `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}`
+}
+
+/** "Hoy", "Ayer" o "Martes 11 de agosto". */
+export function formatearDia(ms: number): string {
+  const f = new Date(ms)
+  const hoy = new Date()
+  const ayer = new Date(hoy)
+  ayer.setDate(hoy.getDate() - 1)
+
+  if (claveDia(ms) === claveDia(hoy.getTime())) return 'Hoy'
+  if (claveDia(ms) === claveDia(ayer.getTime())) return 'Ayer'
+
+  const texto =
+    f.getFullYear() === hoy.getFullYear() ? diaDeEsteAno.format(f) : diaDeOtroAno.format(f)
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
 }

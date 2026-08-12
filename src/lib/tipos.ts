@@ -7,3 +7,6 @@ export type Producto = FunctionReturnType<typeof api.products.list>[number]
 
 /** Una persona del local, para elegir dueño de stock. */
 export type Usuario = FunctionReturnType<typeof api.users.list>[number]
+
+/** Una venta registrada, con sus líneas. */
+export type Venta = FunctionReturnType<typeof api.sales.list>[number]
