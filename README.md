@@ -52,46 +52,75 @@ existe, se le actualiza la contraseña y se cierran sus sesiones abiertas. La fu
 - Node.js 20 o superior
 - Una cuenta en [Convex](https://convex.dev) y otra en [Vercel](https://vercel.com)
 
+## Entornos
+
+Desarrollo y producción están separados de punta a punta: rama de git, deployment de Convex y base
+de datos.
+
+| | Desarrollo | Producción |
+| --- | --- | --- |
+| Rama de git | `dev` | `main` |
+| Deployment de Convex | `disciplined-manatee-505` (dev) | `rare-trout-445` (prod) |
+| Base de datos | de pruebas, desechable | datos reales del local |
+| Cómo se actualiza | `npm run dev:convex` desde tu máquina | un push a `main`, que Vercel construye |
+
+Todo el trabajo ocurre en `dev`. A `main` solo llega lo que se decide promover, y ese merge es una
+decisión manual: nada lo hace de forma automática.
+
+**El deployment de producción de Convex no se toca desde la máquina de nadie.** Solo lo actualiza el
+build de Vercel cuando construye `main`, usando la `CONVEX_DEPLOY_KEY`. Por eso no existe un script
+`deploy` en `package.json`: para que no haya forma de publicar a producción por accidente desde una
+terminal.
+
+El *build command* de `vercel.json` comprueba el entorno antes de tocar Convex:
+
+```bash
+if [ "$VERCEL_ENV" = "production" ]; then
+  npx convex deploy --cmd-url-env-var-name VITE_CONVEX_URL --cmd 'npm run build'
+else
+  npm run build   # los builds de rama no despliegan Convex
+fi
+```
+
+Sin esa condición, cualquier push a una rama haría que Vercel corriera `convex deploy` con la clave
+de producción y publicara código a medio hacer sobre los datos reales.
+
 ## Desarrollo local
+
+Primero, una vez:
 
 ```bash
 npm install
 ```
 
-En una terminal, levanta el backend de Convex (la primera vez pedirá iniciar sesión y crear el proyecto; genera `.env.local` con `VITE_CONVEX_URL`):
+Después, en una terminal el backend de Convex, que trabaja contra el deployment de **desarrollo**
+indicado en `.env.local`:
 
 ```bash
-npx convex dev
+npm run dev:convex
 ```
 
-En otra terminal, levanta el frontend:
+Y en otra terminal el frontend:
 
 ```bash
 npm run dev
 ```
 
-La app queda en `http://localhost:5173`.
+La app queda en `http://localhost:5173`, conectada a la base de datos de desarrollo. Puedes crear,
+borrar y romper lo que necesites: nada de eso llega a producción.
 
-## Despliegue en Vercel
+## Promoción a producción
 
-1. En el [dashboard de Convex](https://dashboard.convex.dev), proyecto `alita-secos`, cambiar al
-   deployment **Production** → *Settings* → *Deploy keys* → **Generate a production deploy key**.
-2. En [vercel.com/new](https://vercel.com/new), importar el repositorio `sgiolpz/alita-secos`
-   (Vercel detecta **Vite** solo).
-3. Antes de dar *Deploy*, en *Environment Variables* agregar:
+1. Verificar en `dev` que todo funciona (`npm run build` con typecheck limpio incluido).
+2. Merge de `dev` a `main`.
+3. Push de `main`. Vercel construye, `npx convex deploy` publica las funciones al deployment de
+   producción y le pasa la `VITE_CONVEX_URL` correcta al build de Vite.
+4. Si el cambio incluye migración de datos, correrla en producción con `npx convex run --prod`
+   **después** de que el deploy haya terminado.
 
-   | Name | Value |
-   | --- | --- |
-   | `CONVEX_DEPLOY_KEY` | la clave generada en el paso 1 |
-
-4. *Deploy*. No hace falta tocar nada más: el *build command* ya viene en `vercel.json`
-
-   ```
-   npx convex deploy --cmd-url-env-var-name VITE_CONVEX_URL --cmd 'npm run build'
-   ```
-
-   Ese comando publica las funciones de Convex en producción y le pasa la `VITE_CONVEX_URL`
-   correcta al build de Vite. Desde ahí, cada push a `main` redespliega frontend y backend.
+Vercel quedó configurado con la `CONVEX_DEPLOY_KEY` de producción del proyecto `alita-secos-08b0c`.
+Esa clave debe ser una **production deploy key**: si es de desarrollo, el sitio publicado termina
+hablándole a la base de datos de pruebas.
 
 ## Estructura
 
