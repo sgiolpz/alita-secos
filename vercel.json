@@ -3,5 +3,10 @@
   "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then npx convex deploy --cmd-url-env-var-name VITE_CONVEX_URL --cmd 'npm run build'; else echo \"Entorno $VERCEL_ENV: se omite el despliegue de Convex para no tocar produccion.\"; npm run build; fi",
   "outputDirectory": "dist",
   "framework": "vite",
+  "git": {
+    "deploymentEnabled": {
+      "dev": false
+    }
+  },
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

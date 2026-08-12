@@ -85,6 +85,16 @@ fi
 Sin esa condición, cualquier push a una rama haría que Vercel corriera `convex deploy` con la clave
 de producción y publicara código a medio hacer sobre los datos reales.
 
+Además, `vercel.json` desactiva los despliegues automáticos de la rama `dev`:
+
+```json
+"git": { "deploymentEnabled": { "dev": false } }
+```
+
+Sin eso, un push a `dev` no tocaría Convex —lo impide la condición de arriba— pero Vercel igual
+publicaría un *preview*. Ese build corre `npm run build` sin `VITE_CONVEX_URL`, así que quedaría una
+URL pública con la app sin backend. El desarrollo se prueba en `localhost`, no en un preview.
+
 ## Desarrollo local
 
 Primero, una vez:
