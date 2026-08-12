@@ -51,7 +51,7 @@ async function salir() {
     <header class="bg-tostado-900 text-kraft-50">
       <div class="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <RouterLink to="/" class="flex items-center gap-3">
-          <img src="/favicon.svg" alt="" class="h-9 w-9" />
+          <img src="/alita.png" alt="" class="h-10 w-auto" />
           <span class="leading-tight">
             <span class="block font-display text-[19px] font-bold tracking-[-0.02em]">
               Alita Secos

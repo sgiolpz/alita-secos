@@ -47,7 +47,7 @@ async function entrar() {
     <div class="w-full max-w-[380px]">
       <div class="overflow-hidden rounded-[10px] border border-kraft-200 bg-nuez-50">
         <div class="flex items-center gap-3 bg-tostado-900 px-6 py-5 text-kraft-50">
-          <img src="/favicon.svg" alt="" class="h-10 w-10" />
+          <img src="/alita.png" alt="" class="h-12 w-auto" />
           <span class="leading-tight">
             <span class="block font-display text-[21px] font-bold tracking-[-0.02em]">
               Alita Secos
