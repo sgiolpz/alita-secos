@@ -32,13 +32,18 @@ function proporcion(total: number): string {
     </p>
 
     <div v-else class="overflow-x-auto">
-      <table class="tabla tabla-apilable">
+      <!-- Ancho fijo en las columnas numéricas para que las dos tablas del
+           módulo compartan la misma geometría: si cada una se dimensiona por su
+           contenido, "Ventas" y "Unidades" caen en distinta posición y dejan de
+           poder compararse de una tarjeta a la otra. Solo aplica cuando la
+           tabla se ve como tabla; apilada en el teléfono no corresponde. -->
+      <table class="tabla tabla-apilable sm:table-fixed">
         <thead>
           <tr>
             <th>{{ columna }}</th>
-            <th class="num">Ventas</th>
-            <th class="num">Unidades</th>
-            <th class="num">Recaudación</th>
+            <th class="num w-28">Ventas</th>
+            <th class="num w-28">Unidades</th>
+            <th class="num w-40">Recaudación</th>
           </tr>
         </thead>
 
