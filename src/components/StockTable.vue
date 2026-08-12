@@ -21,11 +21,16 @@ const error = ref('')
 type Panel = 'recibir' | 'traspasar'
 const panelAbierto = ref<{ id: Id<'products'>; panel: Panel } | null>(null)
 
+/** Dentro del panel "Recibir": sumar stock nuevo, o corregir uno mal ingresado. */
+type ModoRecibir = 'recibir' | 'quitar'
+const modoRecibir = ref<ModoRecibir>('recibir')
+
 const cantidad = ref<number | null>(null)
 const destinatarioId = ref<string>('')
 const origenId = ref<string>('')
 
 const { mutate: recibir, isPending: recibiendo } = useConvexMutation(api.products.receiveStock)
+const { mutate: quitar, isPending: quitando } = useConvexMutation(api.products.removeStock)
 const { mutate: traspasar, isPending: traspasando } = useConvexMutation(api.products.transferStock)
 
 const primerUsuario = computed(() => props.usuarios[0]?._id ?? '')
@@ -40,7 +45,10 @@ function abrir(producto: Producto, panel: Panel) {
   panelAbierto.value = { id: producto._id, panel }
 
   if (panel === 'recibir') {
-    destinatarioId.value = primerUsuario.value
+    modoRecibir.value = 'recibir'
+    // Al corregir tiene más sentido partir de quien ya tiene unidades.
+    const conStock = producto.stocks.find((fila) => fila.quantity > 0)
+    destinatarioId.value = conStock?.userId ?? primerUsuario.value
   } else {
     // Por defecto se traspasa desde quien tenga unidades.
     const conStock = producto.stocks.find((fila) => fila.quantity > 0)
@@ -48,6 +56,12 @@ function abrir(producto: Producto, panel: Panel) {
     destinatarioId.value =
       props.usuarios.find((u) => u._id !== origenId.value)?._id ?? primerUsuario.value
   }
+}
+
+function cambiarModo(modo: ModoRecibir) {
+  modoRecibir.value = modo
+  cantidad.value = null
+  error.value = ''
 }
 
 function cerrar() {
@@ -78,6 +92,27 @@ async function confirmarRecepcion(id: Id<'products'>) {
 
   try {
     await recibir({
+      token: token.value,
+      id,
+      userId: destinatarioId.value as Id<'users'>,
+      quantity: cantidad.value!,
+    })
+    cerrar()
+  } catch (e) {
+    error.value = mensajeDeError(e)
+  }
+}
+
+async function confirmarCorreccion(id: Id<'products'>) {
+  error.value = ''
+  if (!destinatarioId.value) {
+    error.value = 'Elige a quién se le corrige el stock.'
+    return
+  }
+  if (!cantidadValida()) return
+
+  try {
+    await quitar({
       token: token.value,
       id,
       userId: destinatarioId.value as Id<'users'>,
@@ -205,40 +240,93 @@ async function confirmarTraspaso(id: Id<'products'>) {
 
             <tr v-if="estaAbierto(producto, 'recibir')" class="fila-panel bg-kraft-100">
               <td :colspan="usuarios.length + 5" class="px-5 py-4">
-                <div class="flex flex-wrap items-end gap-3">
-                  <div>
-                    <label class="etiqueta" :for="`cant-${producto._id}`">Unidades</label>
-                    <input
-                      :id="`cant-${producto._id}`"
-                      v-model.number="cantidad"
-                      class="campo w-28 py-1.5"
-                      type="number"
-                      min="1"
-                      step="1"
-                      placeholder="10"
-                      @keyup.enter="confirmarRecepcion(producto._id)"
-                    />
-                  </div>
-                  <div>
-                    <label class="etiqueta" :for="`para-${producto._id}`">Se las lleva</label>
-                    <select
-                      :id="`para-${producto._id}`"
-                      v-model="destinatarioId"
-                      class="campo w-44 py-1.5"
+                <div class="space-y-3">
+                  <div class="inline-flex rounded-[5px] border border-kraft-300 bg-nuez-50 p-0.5">
+                    <button
+                      type="button"
+                      class="rounded-[3px] px-3 py-1 text-[13px] font-semibold transition-colors"
+                      :class="
+                        modoRecibir === 'recibir'
+                          ? 'bg-tostado-900 text-kraft-50'
+                          : 'text-tostado-700 hover:bg-kraft-100'
+                      "
+                      @click="cambiarModo('recibir')"
                     >
-                      <option v-for="u in usuarios" :key="u._id" :value="u._id">
-                        {{ u.displayName }}
-                      </option>
-                    </select>
+                      Recibir
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-[3px] px-3 py-1 text-[13px] font-semibold transition-colors"
+                      :class="
+                        modoRecibir === 'quitar'
+                          ? 'bg-piel-600 text-nuez-50'
+                          : 'text-tostado-700 hover:bg-kraft-100'
+                      "
+                      @click="cambiarModo('quitar')"
+                    >
+                      Corregir (quitar)
+                    </button>
                   </div>
-                  <button
-                    class="btn-mini-fuerte h-[38px]"
-                    :disabled="recibiendo"
-                    @click="confirmarRecepcion(producto._id)"
-                  >
-                    Recibir stock
-                  </button>
-                  <button class="btn-mini h-[38px]" @click="cerrar">Cancelar</button>
+
+                  <div class="flex flex-wrap items-end gap-3">
+                    <div>
+                      <label class="etiqueta" :for="`cant-${producto._id}`">Unidades</label>
+                      <input
+                        :id="`cant-${producto._id}`"
+                        v-model.number="cantidad"
+                        class="campo w-28 py-1.5"
+                        type="number"
+                        min="1"
+                        :max="modoRecibir === 'quitar' ? stockDe(producto, destinatarioId) : undefined"
+                        step="1"
+                        placeholder="10"
+                        @keyup.enter="
+                          modoRecibir === 'recibir'
+                            ? confirmarRecepcion(producto._id)
+                            : confirmarCorreccion(producto._id)
+                        "
+                      />
+                    </div>
+                    <div>
+                      <label class="etiqueta" :for="`para-${producto._id}`">
+                        {{ modoRecibir === 'recibir' ? 'Se las lleva' : 'Se le descuenta a' }}
+                      </label>
+                      <select
+                        :id="`para-${producto._id}`"
+                        v-model="destinatarioId"
+                        class="campo w-52 py-1.5"
+                      >
+                        <option v-for="u in usuarios" :key="u._id" :value="u._id">
+                          {{ u.displayName }}
+                          <template v-if="modoRecibir === 'quitar'">
+                            ({{ formatearNumero(stockDe(producto, u._id)) }})
+                          </template>
+                        </option>
+                      </select>
+                    </div>
+
+                    <button
+                      v-if="modoRecibir === 'recibir'"
+                      class="btn-mini-fuerte h-[38px]"
+                      :disabled="recibiendo"
+                      @click="confirmarRecepcion(producto._id)"
+                    >
+                      Recibir stock
+                    </button>
+                    <button
+                      v-else
+                      class="btn-mini h-[38px] border-piel-600 bg-piel-600 text-nuez-50 hover:bg-piel-700"
+                      :disabled="quitando || stockDe(producto, destinatarioId) === 0"
+                      @click="confirmarCorreccion(producto._id)"
+                    >
+                      Quitar stock
+                    </button>
+                    <button class="btn-mini h-[38px]" @click="cerrar">Cancelar</button>
+                  </div>
+
+                  <p v-if="modoRecibir === 'quitar'" class="text-[13px] text-cascara-600">
+                    Se registra como corrección por ingreso incorrecto, con quién la hizo y cuándo.
+                  </p>
                 </div>
               </td>
             </tr>

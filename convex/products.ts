@@ -175,6 +175,81 @@ export const receiveStock = mutation({
   },
 })
 
+/**
+ * Quita stock por error de ingreso: alguien recibió una cantidad equivocada
+ * y hay que descontarla. A diferencia de una venta o un traspaso, esto no
+ * mueve unidades hacia ningún otro lado; queda como corrección con
+ * constancia de qué se corrigió y quién lo hizo.
+ */
+export const removeStock = mutation({
+  args: {
+    token: v.string(),
+    id: v.id('products'),
+    userId: v.id('users'),
+    quantity: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const quienCorrige = await requiereUsuario(ctx, args.token)
+
+    const product = await ctx.db.get(args.id)
+    if (!product) {
+      throw new ConvexError('El producto ya no existe.')
+    }
+    const propietario = await ctx.db.get(args.userId)
+    if (!propietario) {
+      throw new ConvexError('Esa persona ya no existe.')
+    }
+    validarCantidad(args.quantity, 'quitar')
+
+    const actual = await stockDe(ctx, args.id, args.userId)
+    if (args.quantity > actual) {
+      throw new ConvexError(
+        `${propietario.displayName} tiene ${actual} unidades de "${product.name}", no se pueden quitar ${args.quantity}.`,
+      )
+    }
+
+    await ajustarStock(ctx, args.id, args.userId, -args.quantity)
+
+    await ctx.db.insert('stockCorrections', {
+      productId: args.id,
+      userId: args.userId,
+      performedBy: quienCorrige._id,
+      quantity: args.quantity,
+      reason: 'ingreso_incorrecto',
+    })
+  },
+})
+
+/** Últimas correcciones de stock, para dejar trazabilidad de qué se ajustó. */
+export const corrections = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    await requiereUsuario(ctx, args.token)
+
+    const filas = await ctx.db.query('stockCorrections').order('desc').take(20)
+    const [productos, usuarios] = await Promise.all([
+      ctx.db.query('products').collect(),
+      ctx.db.query('users').collect(),
+    ])
+    const productoPorId = new Map(productos.map((p) => [p._id as string, p]))
+    const nombrePorUsuario = new Map(usuarios.map((u) => [u._id as string, u.displayName]))
+
+    return filas.map((fila) => {
+      const producto = productoPorId.get(fila.productId)
+      return {
+        _id: fila._id,
+        _creationTime: fila._creationTime,
+        productName: producto?.name ?? 'Producto eliminado',
+        size: producto?.size,
+        unit: producto?.unit,
+        ownerName: nombrePorUsuario.get(fila.userId) ?? 'Persona eliminada',
+        performedByName: nombrePorUsuario.get(fila.performedBy) ?? 'Persona eliminada',
+        quantity: fila.quantity,
+      }
+    })
+  },
+})
+
 /** Pasa unidades del stock de una persona al de otra. */
 export const transferStock = mutation({
   args: {
