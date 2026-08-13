@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import VentasView from '@/views/VentasView.vue'
-import { haySesion } from '@/lib/sesion'
+import { esAdmin, haySesion } from '@/lib/sesion'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,6 +24,12 @@ const router = createRouter({
       component: () => import('@/views/RecaudacionView.vue'),
     },
     {
+      path: '/administracion',
+      name: 'administracion',
+      component: () => import('@/views/AdministracionView.vue'),
+      meta: { soloAdmin: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
@@ -41,6 +47,12 @@ router.beforeEach((to) => {
 
   if (!haySesion.value) {
     return { name: 'login', query: to.fullPath === '/' ? {} : { redirigir: to.fullPath } }
+  }
+
+  // Este guardia solo ordena la navegación; quien manda es el servidor, que
+  // exige el rol en cada función de Administración.
+  if (to.meta.soloAdmin && !esAdmin.value) {
+    return { name: 'ventas' }
   }
 
   return true

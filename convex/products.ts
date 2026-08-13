@@ -1,7 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 
 import { mutation, query } from './_generated/server'
-import { requiereUsuario } from './model/auth'
+import { personaDeTienda, productoDeTienda, requiereTienda } from './model/tienda'
 import { ajustarStock, stockDe, validarCantidad } from './model/stock'
 
 const unidadValidador = v.union(v.literal('g'), v.literal('un'))
@@ -11,11 +11,11 @@ function medidaLegible(size: number, unit: 'g' | 'un'): string {
 }
 
 /**
- * El catálogo completo con su stock repartido por persona.
+ * El catálogo de la tienda con su stock repartido por persona.
  *
  * `propio` es lo que tiene quien hace la consulta: es el único stock que esa
- * persona puede vender. `stocks` trae el reparto completo, porque la
- * información es global y en Inventario se ve quién tiene qué.
+ * persona puede vender. `stocks` trae el reparto completo dentro de la tienda,
+ * porque en Inventario se ve quién tiene qué.
  *
  * Lee las dos tablas de una vez y las cruza en memoria: son pocas filas y así
  * se evita una consulta de stock por cada producto.
@@ -23,11 +23,17 @@ function medidaLegible(size: number, unit: 'g' | 'un'): string {
 export const list = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    const usuario = await requiereUsuario(ctx, args.token)
+    const { usuario, storeId } = await requiereTienda(ctx, args.token)
 
     const [productos, stocks] = await Promise.all([
-      ctx.db.query('products').collect(),
-      ctx.db.query('stocks').collect(),
+      ctx.db
+        .query('products')
+        .withIndex('by_store', (q) => q.eq('storeId', storeId))
+        .collect(),
+      ctx.db
+        .query('stocks')
+        .withIndex('by_store', (q) => q.eq('storeId', storeId))
+        .collect(),
     ])
 
     const porProducto = new Map<string, { userId: string; quantity: number }[]>()
@@ -57,8 +63,8 @@ export const list = query({
 })
 
 /**
- * Crea un producto en el catálogo. Nace sin stock: la mercadería se recibe
- * después, a nombre de quien la va a vender.
+ * Crea un producto en el catálogo de la tienda. Nace sin stock: la mercadería
+ * se recibe después, a nombre de quien la va a vender.
  */
 export const add = mutation({
   args: {
@@ -69,7 +75,7 @@ export const add = mutation({
     price: v.number(),
   },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
+    const { storeId } = await requiereTienda(ctx, args.token)
 
     const name = args.name.trim()
     if (name.length === 0) {
@@ -83,16 +89,18 @@ export const add = mutation({
     }
 
     // Se permite repetir el nombre con otra presentación (250 g y 500 g),
-    // pero no la misma presentación dos veces.
+    // pero no la misma presentación dos veces. El choque se mira solo dentro
+    // de la tienda: dos tiendas pueden vender lo mismo sin estorbarse.
     const mismoNombre = await ctx.db
       .query('products')
-      .withIndex('by_name', (q) => q.eq('name', name))
+      .withIndex('by_store_name', (q) => q.eq('storeId', storeId).eq('name', name))
       .collect()
     if (mismoNombre.some((p) => p.size === args.size && p.unit === args.unit)) {
       throw new ConvexError(`Ya existe "${name}" de ${medidaLegible(args.size, args.unit)}.`)
     }
 
     return await ctx.db.insert('products', {
+      storeId,
       name,
       size: args.size,
       unit: args.unit,
@@ -112,12 +120,8 @@ export const update = mutation({
     price: v.number(),
   },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
-
-    const product = await ctx.db.get(args.id)
-    if (!product) {
-      throw new ConvexError('El producto ya no existe.')
-    }
+    const { storeId } = await requiereTienda(ctx, args.token)
+    await productoDeTienda(ctx, args.id, storeId)
 
     const name = args.name.trim()
     if (name.length === 0) {
@@ -132,7 +136,7 @@ export const update = mutation({
 
     const mismoNombre = await ctx.db
       .query('products')
-      .withIndex('by_name', (q) => q.eq('name', name))
+      .withIndex('by_store_name', (q) => q.eq('storeId', storeId).eq('name', name))
       .collect()
     const duplicado = mismoNombre.some(
       (p) => p._id !== args.id && p.size === args.size && p.unit === args.unit,
@@ -159,19 +163,13 @@ export const receiveStock = mutation({
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
+    const { storeId } = await requiereTienda(ctx, args.token)
 
-    const product = await ctx.db.get(args.id)
-    if (!product) {
-      throw new ConvexError('El producto ya no existe.')
-    }
-    const destinatario = await ctx.db.get(args.userId)
-    if (!destinatario) {
-      throw new ConvexError('Esa persona ya no existe.')
-    }
+    await productoDeTienda(ctx, args.id, storeId)
+    await personaDeTienda(ctx, args.userId, storeId)
     validarCantidad(args.quantity, 'recibir')
 
-    await ajustarStock(ctx, args.id, args.userId, args.quantity)
+    await ajustarStock(ctx, storeId, args.id, args.userId, args.quantity)
   },
 })
 
@@ -189,16 +187,10 @@ export const removeStock = mutation({
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
-    const quienCorrige = await requiereUsuario(ctx, args.token)
+    const { usuario: quienCorrige, storeId } = await requiereTienda(ctx, args.token)
 
-    const product = await ctx.db.get(args.id)
-    if (!product) {
-      throw new ConvexError('El producto ya no existe.')
-    }
-    const propietario = await ctx.db.get(args.userId)
-    if (!propietario) {
-      throw new ConvexError('Esa persona ya no existe.')
-    }
+    const product = await productoDeTienda(ctx, args.id, storeId)
+    const propietario = await personaDeTienda(ctx, args.userId, storeId)
     validarCantidad(args.quantity, 'quitar')
 
     const actual = await stockDe(ctx, args.id, args.userId)
@@ -208,9 +200,10 @@ export const removeStock = mutation({
       )
     }
 
-    await ajustarStock(ctx, args.id, args.userId, -args.quantity)
+    await ajustarStock(ctx, storeId, args.id, args.userId, -args.quantity)
 
     await ctx.db.insert('stockCorrections', {
+      storeId,
       productId: args.id,
       userId: args.userId,
       performedBy: quienCorrige._id,
@@ -220,16 +213,27 @@ export const removeStock = mutation({
   },
 })
 
-/** Últimas correcciones de stock, para dejar trazabilidad de qué se ajustó. */
+/** Últimas correcciones de stock de la tienda, para dejar trazabilidad. */
 export const corrections = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
+    const { storeId } = await requiereTienda(ctx, args.token)
 
-    const filas = await ctx.db.query('stockCorrections').order('desc').take(20)
+    const filas = await ctx.db
+      .query('stockCorrections')
+      .withIndex('by_store', (q) => q.eq('storeId', storeId))
+      .order('desc')
+      .take(20)
+
     const [productos, usuarios] = await Promise.all([
-      ctx.db.query('products').collect(),
-      ctx.db.query('users').collect(),
+      ctx.db
+        .query('products')
+        .withIndex('by_store', (q) => q.eq('storeId', storeId))
+        .collect(),
+      ctx.db
+        .query('users')
+        .withIndex('by_store', (q) => q.eq('storeId', storeId))
+        .collect(),
     ])
     const productoPorId = new Map(productos.map((p) => [p._id as string, p]))
     const nombrePorUsuario = new Map(usuarios.map((u) => [u._id as string, u.displayName]))
@@ -250,7 +254,7 @@ export const corrections = query({
   },
 })
 
-/** Pasa unidades del stock de una persona al de otra. */
+/** Pasa unidades del stock de una persona al de otra, dentro de la tienda. */
 export const transferStock = mutation({
   args: {
     token: v.string(),
@@ -260,21 +264,15 @@ export const transferStock = mutation({
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
+    const { storeId } = await requiereTienda(ctx, args.token)
 
     if (args.fromUserId === args.toUserId) {
       throw new ConvexError('Elige dos personas distintas para el traspaso.')
     }
 
-    const product = await ctx.db.get(args.id)
-    if (!product) {
-      throw new ConvexError('El producto ya no existe.')
-    }
-    const origen = await ctx.db.get(args.fromUserId)
-    const destino = await ctx.db.get(args.toUserId)
-    if (!origen || !destino) {
-      throw new ConvexError('Esa persona ya no existe.')
-    }
+    const product = await productoDeTienda(ctx, args.id, storeId)
+    const origen = await personaDeTienda(ctx, args.fromUserId, storeId)
+    await personaDeTienda(ctx, args.toUserId, storeId)
     validarCantidad(args.quantity, 'traspasar')
 
     const disponible = await stockDe(ctx, args.id, args.fromUserId)
@@ -284,8 +282,8 @@ export const transferStock = mutation({
       )
     }
 
-    await ajustarStock(ctx, args.id, args.fromUserId, -args.quantity)
-    await ajustarStock(ctx, args.id, args.toUserId, args.quantity)
+    await ajustarStock(ctx, storeId, args.id, args.fromUserId, -args.quantity)
+    await ajustarStock(ctx, storeId, args.id, args.toUserId, args.quantity)
   },
 })
 
@@ -296,12 +294,8 @@ export const remove = mutation({
     id: v.id('products'),
   },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
-
-    const product = await ctx.db.get(args.id)
-    if (!product) {
-      throw new ConvexError('El producto ya no existe.')
-    }
+    const { storeId } = await requiereTienda(ctx, args.token)
+    await productoDeTienda(ctx, args.id, storeId)
 
     const filas = await ctx.db
       .query('stocks')
