@@ -1,29 +1,56 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { useConvexMutation, useConvexQuery } from 'convex-vue'
+import { useConvexQuery } from 'convex-vue'
 
 import { api } from '../convex/_generated/api'
-import { borrarSesion, esAdmin, haySesion, sesion, sincronizarSesion, token } from '@/lib/sesion'
+import { borrarSesion, haySesion, sincronizarSesion, token } from '@/lib/sesion'
+import PanelNavegacion from '@/components/PanelNavegacion.vue'
 
 const route = useRoute()
 const router = useRouter()
 
-const TODOS_LOS_ENLACES = [
-  { nombre: 'ventas', ruta: '/', texto: 'Ventas' },
-  { nombre: 'inventario', ruta: '/inventario', texto: 'Inventario' },
-  { nombre: 'productos', ruta: '/productos', texto: 'Productos' },
-  { nombre: 'recaudacion', ruta: '/recaudacion', texto: 'Recaudación' },
-  { nombre: 'administracion', ruta: '/administracion', texto: 'Administración', soloAdmin: true },
-]
-
-const enlaces = computed(() =>
-  TODOS_LOS_ENLACES.filter((enlace) => !enlace.soloAdmin || esAdmin.value),
-)
-
 const enLogin = computed(() => route.name === 'login')
 
-const { mutate: cerrarSesionEnServidor } = useConvexMutation(api.auth.cerrarSesion)
+/** El cajón de navegación de móvil. En pantallas grandes el menú está siempre a la vista. */
+const menuAbierto = ref(false)
+
+const anchoDeEscritorio = window.matchMedia('(min-width: 64rem)')
+
+function cerrarMenu() {
+  menuAbierto.value = false
+}
+
+// Con el cajón abierto, el fondo no debe desplazarse: lo que se toca es el menú.
+watch(menuAbierto, (abierto) => {
+  document.body.style.overflow = abierto ? 'hidden' : ''
+})
+
+function alPresionarTecla(evento: KeyboardEvent) {
+  if (evento.key === 'Escape') cerrarMenu()
+}
+
+// Al pasar a pantalla grande el cajón deja de tener sentido: se cierra para no
+// dejar el fondo bloqueado.
+function alCambiarElAncho(evento: MediaQueryListEvent) {
+  if (evento.matches) cerrarMenu()
+}
+
+watch(menuAbierto, (abierto) => {
+  if (abierto) {
+    window.addEventListener('keydown', alPresionarTecla)
+    anchoDeEscritorio.addEventListener('change', alCambiarElAncho)
+  } else {
+    window.removeEventListener('keydown', alPresionarTecla)
+    anchoDeEscritorio.removeEventListener('change', alCambiarElAncho)
+  }
+})
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+  window.removeEventListener('keydown', alPresionarTecla)
+  anchoDeEscritorio.removeEventListener('change', alCambiarElAncho)
+})
 
 // Si el token deja de ser válido (expiró o se cambió la contraseña), se cierra
 // la sesión en el navegador y se vuelve a la pantalla de acceso.
@@ -55,79 +82,82 @@ watch(sesionEnServidor, async (valor) => {
     await router.replace({ name: 'ventas' })
   }
 })
-
-async function salir() {
-  const tokenActual = token.value
-  borrarSesion()
-  await router.replace({ name: 'login' })
-  try {
-    await cerrarSesionEnServidor({ token: tokenActual })
-  } catch {
-    // La sesión local ya se cerró; si el servidor no responde no hay nada que hacer.
-  }
-}
 </script>
 
 <template>
   <RouterView v-if="enLogin" />
 
-  <div v-else class="flex min-h-screen flex-col bg-kraft-50">
-    <header class="bg-tostado-900 text-kraft-50">
-      <div class="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <RouterLink to="/" class="flex items-center gap-3">
-          <img src="/alita.png" alt="" class="h-10 w-auto" />
-          <span class="leading-tight">
-            <span class="block font-display text-[19px] font-bold tracking-[-0.02em]">
-              Alita Secos
-            </span>
-            <span class="rotulo block text-cascara-400">Frutos secos</span>
-          </span>
-        </RouterLink>
+  <div v-else class="min-h-screen bg-kraft-50 lg:flex">
+    <!-- Pantallas chicas: solo la marca y la llave del menú. El nombre de la
+         sección ya lo dice el título de la página. -->
+    <header
+      class="superficie-tostada sticky top-0 z-30 flex items-center gap-3 bg-tostado-900 px-4 py-3 text-kraft-50 lg:hidden"
+    >
+      <button
+        type="button"
+        class="-ml-1.5 rounded-[4px] p-1.5 text-cascara-400 transition-colors hover:bg-tostado-800 hover:text-kraft-100"
+        aria-controls="menu-principal"
+        :aria-expanded="menuAbierto"
+        @click="menuAbierto = true"
+      >
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M4 7h16M4 12h16M4 17h16"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+          />
+        </svg>
+        <span class="sr-only">Abrir menú</span>
+      </button>
 
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <!-- Con el enlace de Administración ya no caben los cinco en una fila
-               angosta: se dejan envolver en vez de desbordar. -->
-          <nav class="flex flex-wrap gap-x-5 gap-y-2 sm:gap-x-6">
-            <RouterLink
-              v-for="enlace in enlaces"
-              :key="enlace.nombre"
-              :to="enlace.ruta"
-              class="border-b-2 pb-1 font-sans text-[14px] font-semibold tracking-[0.01em] transition-colors"
-              :class="
-                route.name === enlace.nombre
-                  ? 'border-piel-500 text-kraft-50'
-                  : 'border-transparent text-cascara-400 hover:text-kraft-100'
-              "
-            >
-              {{ enlace.texto }}
-            </RouterLink>
-          </nav>
-
-          <div class="flex items-center gap-3 sm:border-l sm:border-tostado-700 sm:pl-6">
-            <span class="text-[13px] leading-tight text-cascara-400">
-              <span class="block text-kraft-100">{{ sesion?.displayName }}</span>
-              <span class="block">{{ sesion?.storeName }}</span>
-            </span>
-            <button
-              class="rounded-[4px] px-2 py-1 text-[13px] font-semibold text-kraft-100 transition-colors hover:bg-tostado-700"
-              type="button"
-              @click="salir"
-            >
-              Salir
-            </button>
-          </div>
-        </div>
-      </div>
+      <RouterLink to="/" class="flex items-center gap-2.5">
+        <img src="/alita.png" alt="" class="h-8 w-auto" />
+        <span class="font-display text-[17px] font-bold tracking-[-0.02em]">Alita Secos</span>
+      </RouterLink>
     </header>
 
-    <main class="mx-auto w-full max-w-6xl flex-1 px-5 py-8">
-      <RouterView />
-    </main>
+    <!-- Pantallas grandes: el menú vive en la columna y no se va nunca. -->
+    <aside class="hidden w-64 shrink-0 lg:sticky lg:top-0 lg:block lg:h-screen">
+      <PanelNavegacion />
+    </aside>
 
-    <footer class="mx-auto w-full max-w-6xl px-5 pb-8">
-      <p class="rotulo border-t border-kraft-200 pt-4 text-cascara-500">
-        Alita Secos
-      </p>
-    </footer>
+    <Transition
+      enter-active-class="duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="menuAbierto"
+        class="fixed inset-0 z-40 bg-tostado-900/60 transition-opacity lg:hidden"
+        @click="cerrarMenu"
+      />
+    </Transition>
+
+    <Transition
+      enter-active-class="duration-200 ease-out"
+      enter-from-class="-translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="duration-150 ease-in"
+      leave-from-class="translate-x-0"
+      leave-to-class="-translate-x-full"
+    >
+      <div
+        v-if="menuAbierto"
+        id="menu-principal"
+        class="fixed inset-y-0 left-0 z-50 w-[17rem] max-w-[85vw] transition-transform lg:hidden"
+      >
+        <PanelNavegacion en-cajon @navegar="cerrarMenu" @cerrar="cerrarMenu" />
+      </div>
+    </Transition>
+
+    <main class="min-w-0 flex-1">
+      <div class="mx-auto w-full max-w-6xl px-5 py-8 lg:px-10 lg:py-10">
+        <RouterView />
+      </div>
+    </main>
   </div>
 </template>

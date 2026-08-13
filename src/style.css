@@ -65,6 +65,12 @@
     outline-offset: 2px;
   }
 
+  /* Sobre el tostado del menú el granate del foco se pierde: ahí el anillo se
+     dibuja con el color de la cáscara, que sí se ve. */
+  .superficie-tostada :focus-visible {
+    outline-color: var(--color-cascara-400);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
