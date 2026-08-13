@@ -26,11 +26,17 @@ async function entrar() {
   }
 
   try {
-    const sesion = await iniciarSesion({
+    const datos = await iniciarSesion({
       username: usuario.value,
       password: password.value,
     })
-    guardarSesion(sesion)
+    guardarSesion({
+      token: datos.token,
+      username: datos.username,
+      displayName: datos.displayName,
+      role: datos.role,
+      storeName: datos.storeName,
+    })
     password.value = ''
 
     const destino = typeof route.query.redirigir === 'string' ? route.query.redirigir : '/'

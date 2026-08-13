@@ -31,6 +31,7 @@ export async function stockDe(
  */
 export async function ajustarStock(
   ctx: MutationCtx,
+  storeId: Id<'stores'>,
   productId: Id<'products'>,
   userId: Id<'users'>,
   delta: number,
@@ -45,7 +46,7 @@ export async function ajustarStock(
 
   if (!fila) {
     if (nuevo > 0) {
-      await ctx.db.insert('stocks', { productId, userId, quantity: nuevo })
+      await ctx.db.insert('stocks', { storeId, productId, userId, quantity: nuevo })
     }
   } else if (nuevo === 0) {
     await ctx.db.delete(fila._id)

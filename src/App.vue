@@ -4,17 +4,22 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useConvexMutation, useConvexQuery } from 'convex-vue'
 
 import { api } from '../convex/_generated/api'
-import { borrarSesion, haySesion, sesion, token } from '@/lib/sesion'
+import { borrarSesion, esAdmin, haySesion, sesion, sincronizarSesion, token } from '@/lib/sesion'
 
 const route = useRoute()
 const router = useRouter()
 
-const enlaces = [
+const TODOS_LOS_ENLACES = [
   { nombre: 'ventas', ruta: '/', texto: 'Ventas' },
   { nombre: 'inventario', ruta: '/inventario', texto: 'Inventario' },
   { nombre: 'productos', ruta: '/productos', texto: 'Productos' },
   { nombre: 'recaudacion', ruta: '/recaudacion', texto: 'Recaudación' },
+  { nombre: 'administracion', ruta: '/administracion', texto: 'Administración', soloAdmin: true },
 ]
+
+const enlaces = computed(() =>
+  TODOS_LOS_ENLACES.filter((enlace) => !enlace.soloAdmin || esAdmin.value),
+)
 
 const enLogin = computed(() => route.name === 'login')
 
@@ -27,9 +32,27 @@ const { data: sesionEnServidor } = useConvexQuery(api.auth.sesionActual, () => (
 }))
 
 watch(sesionEnServidor, async (valor) => {
-  if (haySesion.value && valor === null) {
+  if (!haySesion.value) return
+
+  if (valor === null) {
     borrarSesion()
     await router.replace({ name: 'login' })
+    return
+  }
+
+  if (!valor) return
+
+  // Si el administrador cambió de tienda o de rol a alguien, el cambio se ve
+  // sin tener que volver a entrar.
+  sincronizarSesion({
+    username: valor.username,
+    displayName: valor.displayName,
+    role: valor.role,
+    storeName: valor.storeName,
+  })
+
+  if (route.meta.soloAdmin && valor.role !== 'admin') {
+    await router.replace({ name: 'ventas' })
   }
 })
 
@@ -62,7 +85,9 @@ async function salir() {
         </RouterLink>
 
         <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <nav class="flex gap-6">
+          <!-- Con el enlace de Administración ya no caben los cinco en una fila
+               angosta: se dejan envolver en vez de desbordar. -->
+          <nav class="flex flex-wrap gap-x-5 gap-y-2 sm:gap-x-6">
             <RouterLink
               v-for="enlace in enlaces"
               :key="enlace.nombre"
@@ -79,7 +104,10 @@ async function salir() {
           </nav>
 
           <div class="flex items-center gap-3 sm:border-l sm:border-tostado-700 sm:pl-6">
-            <span class="text-[13px] text-cascara-400">{{ sesion?.displayName }}</span>
+            <span class="text-[13px] leading-tight text-cascara-400">
+              <span class="block text-kraft-100">{{ sesion?.displayName }}</span>
+              <span class="block">{{ sesion?.storeName }}</span>
+            </span>
             <button
               class="rounded-[4px] px-2 py-1 text-[13px] font-semibold text-kraft-100 transition-colors hover:bg-tostado-700"
               type="button"

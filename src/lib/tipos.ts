@@ -19,3 +19,9 @@ export type FilaRecaudacion = Recaudacion['porUsuario'][number]
 
 /** Una corrección de stock registrada (ingreso incorrecto, ya descontado). */
 export type Correccion = FunctionReturnType<typeof api.products.corrections>[number]
+
+/** Una tienda vista desde Administración, con su tamaño. */
+export type Tienda = FunctionReturnType<typeof api.admin.tiendas>[number]
+
+/** Una persona vista desde Administración, con su tienda y su rol. */
+export type UsuarioAdmin = FunctionReturnType<typeof api.admin.usuarios>[number]

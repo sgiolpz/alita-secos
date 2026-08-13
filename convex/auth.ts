@@ -1,6 +1,8 @@
 import { ConvexError, v } from 'convex/values'
 
+import type { Doc } from './_generated/dataModel'
 import { internalMutation, mutation, query } from './_generated/server'
+import type { QueryCtx } from './_generated/server'
 import {
   hashearPassword,
   normalizarUsuario,
@@ -9,8 +11,28 @@ import {
   usuarioDeSesion,
   vencimientoSesion,
 } from './model/auth'
+import { esAdmin } from './model/tienda'
 
 const CREDENCIALES_INVALIDAS = 'Usuario o contraseña incorrectos.'
+const TIENDA_INACTIVA = 'Tu tienda está desactivada. Habla con el administrador.'
+
+/**
+ * Lo que el navegador necesita saber de la sesión: quién es, de qué tienda y
+ * si administra. Nunca sale de aquí nada sensible.
+ *
+ * La tienda viaja para poder mostrarla, no para filtrar: el `storeId` que usan
+ * las funciones del negocio siempre se relee del usuario en el servidor.
+ */
+async function datosDeSesion(ctx: QueryCtx, usuario: Doc<'users'>) {
+  const tienda = usuario.storeId ? await ctx.db.get(usuario.storeId) : null
+  return {
+    username: usuario.username,
+    displayName: usuario.displayName,
+    role: esAdmin(usuario) ? ('admin' as const) : ('member' as const),
+    storeId: tienda?._id ?? null,
+    storeName: tienda?.name ?? '',
+  }
+}
 
 /** Datos de la sesión abierta, o `null` si el token ya no sirve. */
 export const sesionActual = query({
@@ -18,7 +40,7 @@ export const sesionActual = query({
   handler: async (ctx, args) => {
     const usuario = await usuarioDeSesion(ctx, args.token)
     if (!usuario) return null
-    return { username: usuario.username, displayName: usuario.displayName }
+    return await datosDeSesion(ctx, usuario)
   },
 })
 
@@ -40,6 +62,15 @@ export const iniciarSesion = mutation({
       throw new ConvexError(CREDENCIALES_INVALIDAS)
     }
 
+    // Una tienda desactivada no deja entrar a su gente. El administrador global
+    // sí entra igual: es quien tiene que poder volver a activarla.
+    if (!esAdmin(usuario)) {
+      const tienda = usuario.storeId ? await ctx.db.get(usuario.storeId) : null
+      if (tienda && !tienda.active) {
+        throw new ConvexError(TIENDA_INACTIVA)
+      }
+    }
+
     const token = nuevoToken()
     await ctx.db.insert('sessions', {
       userId: usuario._id,
@@ -47,11 +78,7 @@ export const iniciarSesion = mutation({
       expiresAt: vencimientoSesion(),
     })
 
-    return {
-      token,
-      username: usuario.username,
-      displayName: usuario.displayName,
-    }
+    return { token, ...(await datosDeSesion(ctx, usuario)) }
   },
 })
 
@@ -73,7 +100,8 @@ export const cerrarSesion = mutation({
  *
  * Es `internalMutation`: no se puede llamar desde el navegador, solo desde la
  * terminal con `npx convex run auth:guardarUsuario ...` o desde el dashboard.
- * Así la app no tiene registro abierto.
+ * Es la puerta de rescate para el administrador global; el día a día de crear
+ * usuarios se hace desde Administración.
  */
 export const guardarUsuario = internalMutation({
   args: {
@@ -121,6 +149,7 @@ export const guardarUsuario = internalMutation({
       displayName: args.displayName,
       passwordHash: hash,
       passwordSalt: salt,
+      role: 'member',
     })
     return `Usuario "${username}" creado.`
   },

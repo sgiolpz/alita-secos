@@ -1,18 +1,22 @@
 import { v } from 'convex/values'
 
 import { query } from './_generated/server'
-import { requiereUsuario } from './model/auth'
+import { requiereTienda } from './model/tienda'
 
 /**
- * Las personas del local, para elegir a quién se le entrega el stock.
+ * Las personas de la tienda, para elegir a quién se le entrega el stock.
  * Nunca devuelve hashes ni sales: solo lo necesario para mostrar y elegir.
  */
 export const list = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    await requiereUsuario(ctx, args.token)
+    const { storeId } = await requiereTienda(ctx, args.token)
 
-    const usuarios = await ctx.db.query('users').collect()
+    const usuarios = await ctx.db
+      .query('users')
+      .withIndex('by_store', (q) => q.eq('storeId', storeId))
+      .collect()
+
     return usuarios
       .map((usuario) => ({
         _id: usuario._id,
